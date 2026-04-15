@@ -1,6 +1,6 @@
 // Replace GOOGLE_CLIENT_ID and SHEET_ID with your values from Task 1
-export const GOOGLE_CLIENT_ID = 'YOUR_CLIENT_ID.apps.googleusercontent.com';
-export const SHEET_ID = 'YOUR_GOOGLE_SHEET_ID';
+export const GOOGLE_CLIENT_ID = '916433882107-hat21936crrnkhgdrmabv1kmlf0a7cbv.apps.googleusercontent.com';
+export const SHEET_ID = '1j_E4xAEBmx8TpumZYTI76PLhQ9E_htud-yCbMqUw9kM';
 export const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
 
 // Metrics present for all team types
