@@ -1,0 +1,59 @@
+/* Player strip */
+#player-strip-container {
+  background: var(--teal-dark);
+  padding: 10px 12px 8px;
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+}
+.player-strip { display: inline-flex; gap: 6px; }
+.player-chip {
+  display: inline-block; padding: 6px 12px; border-radius: 20px;
+  font-size: 13px; font-weight: 600; cursor: pointer; border: 2px solid transparent;
+  background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7);
+  white-space: nowrap; transition: all 0.15s;
+}
+.player-chip.done { background: var(--green); color: white; border-color: var(--green-light); }
+.player-chip.active { background: white; color: var(--teal-dark); border-color: white; }
+.player-chip:hover:not(.active) { background: rgba(255,255,255,0.2); }
+
+/* Entry form */
+.entry-form { padding-bottom: 40px; }
+.entry-player-name {
+  font-size: 22px; font-weight: 900; color: var(--teal);
+  margin-bottom: 4px; text-transform: uppercase;
+}
+.entry-progress { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
+
+.metric-group { margin-bottom: 16px; }
+.metric-label {
+  font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 4px;
+}
+.metric-prev { font-size: 11px; color: var(--text-faint); margin-bottom: 4px; }
+.metric-input {
+  width: 100%; padding: 14px 16px; font-size: 20px; font-weight: 700;
+  border: 2px solid var(--border); border-radius: var(--radius);
+  background: white; color: var(--text);
+  -webkit-appearance: none; appearance: none;
+}
+.metric-input:focus { outline: none; border-color: var(--teal); }
+.mas-inputs { display: flex; align-items: center; gap: 8px; }
+.mas-inputs .metric-input { flex: 1; text-align: center; }
+.mas-sep { font-size: 24px; font-weight: 900; color: var(--text-muted); }
+.section-divider {
+  margin: 20px 0 16px; padding-top: 16px;
+  border-top: 2px solid var(--teal); font-size: 12px;
+  font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--teal);
+}
+.entry-actions { display: flex; gap: 10px; margin-top: 24px; }
+.btn-skip {
+  flex: 1; padding: 14px; border: 2px solid var(--border); border-radius: var(--radius);
+  background: white; font-size: 15px; font-weight: 600; cursor: pointer; color: var(--text-muted);
+}
+.btn-skip:hover { border-color: var(--text-muted); }
+.btn-next-player {
+  flex: 2; padding: 14px; background: var(--teal); color: white;
+  border: none; border-radius: var(--radius); font-size: 15px; font-weight: 700; cursor: pointer;
+}
+.btn-next-player:hover { background: var(--teal-dark); }
