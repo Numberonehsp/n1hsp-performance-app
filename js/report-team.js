@@ -1,9 +1,11 @@
 import { getData, findPreviousSession, getPlayerResult, computeMetricStats,
          sortResultsByMetric, getDisplayValue, getNumericValue, formatMas } from './data.js';
 import { METRIC_CONFIG, METRICS_ALL, METRICS_SENIOR } from './config.js';
-import { navigate } from './router.js';
-
 export async function renderTeamReport(sessionId) {
+  if (!getData()) {
+    document.getElementById('team-report-content').innerHTML = '<p>Loading data…</p>';
+    return;
+  }
   const { clubs, teams, players, sessions, results } = getData();
   const session = sessions.find(s => s.id === sessionId);
   if (!session) {
@@ -12,7 +14,15 @@ export async function renderTeamReport(sessionId) {
   }
 
   const team = teams.find(t => t.id === session.team_id);
+  if (!team) {
+    document.getElementById('team-report-content').innerHTML = '<p>Team not found.</p>';
+    return;
+  }
   const club = clubs.find(c => c.id === team.club_id);
+  if (!club) {
+    document.getElementById('team-report-content').innerHTML = '<p>Club not found.</p>';
+    return;
+  }
   const teamPlayers = players.filter(p => p.team_id === team.id);
   const sessionResults = results.filter(r => r.session_id === sessionId);
   const metrics = team.type === 'Senior'
@@ -53,7 +63,7 @@ export async function renderTeamReport(sessionId) {
     if (stats.count === 0) return;
     const cfg = METRIC_CONFIG[metric];
     const avgDisplay = metric === 'mas'
-      ? formatMas(Math.floor(stats.avg / 60), Math.round(stats.avg % 60))
+      ? (() => { const s = Math.round(stats.avg); return formatMas(Math.floor(s / 60), s % 60); })()
       : stats.avg.toFixed(1);
     strip.insertAdjacentHTML('beforeend', `
       <div class="summary-card">
@@ -115,9 +125,11 @@ export async function renderTeamReport(sessionId) {
               callbacks: {
                 label: (ctx) => {
                   const val = ctx.raw;
-                  return metric === 'mas'
-                    ? formatMas(Math.floor(val / 60), Math.round(val % 60))
-                    : `${val} ${cfg.unit}`;
+                  if (metric === 'mas') {
+                    const s = Math.round(val);
+                    return formatMas(Math.floor(s / 60), s % 60);
+                  }
+                  return `${val} ${cfg.unit}`;
                 },
                 afterLabel: (ctx) => {
                   const prev = prevValues[ctx.dataIndex];
@@ -133,9 +145,13 @@ export async function renderTeamReport(sessionId) {
             y: {
               beginAtZero: false,
               ticks: {
-                callback: (v) => metric === 'mas'
-                  ? formatMas(Math.floor(v / 60), Math.round(v % 60))
-                  : v,
+                callback: (v) => {
+                  if (metric === 'mas') {
+                    const s = Math.round(v);
+                    return formatMas(Math.floor(s / 60), s % 60);
+                  }
+                  return v;
+                },
               },
             },
             x: { ticks: { font: { size: 11 } } },

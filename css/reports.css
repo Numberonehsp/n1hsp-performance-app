@@ -92,4 +92,6 @@
   .metric-row { page-break-inside: avoid; }
   .report-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .progress-fill, .progress-avg, .progress-prev { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .summary-card-value { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .report-footer { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
