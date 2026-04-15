@@ -44,7 +44,7 @@ export async function renderDashboard() {
              </div>
              ${teamSessions.length > 1 ? `
                <details class="past-sessions">
-                 <summary>All sessions (${teamSessions.length})</summary>
+                 <summary>Older sessions (${teamSessions.length - 1})</summary>
                  ${teamSessions.slice(1).map(s =>
                    `<div class="past-session-row">
                      ${s.date}
