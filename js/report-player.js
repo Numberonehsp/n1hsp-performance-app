@@ -1,5 +1,5 @@
 import { getData, findPreviousSession, getPlayerResult, computeMetricStats,
-         getDisplayValue, getNumericValue, formatMas } from './data.js';
+         getNumericValue, formatMas } from './data.js';
 import { METRIC_CONFIG, METRICS_ALL, METRICS_SENIOR } from './config.js';
 
 export async function renderPlayerReport(playerId, sessionId) {
@@ -16,6 +16,10 @@ export async function renderPlayerReport(playerId, sessionId) {
   }
 
   const player = players.find(p => p.id === playerId);
+  if (!player) {
+    document.getElementById('player-report-content').innerHTML = '<p>Player not found.</p>';
+    return;
+  }
   const team = teams.find(t => t.id === session.team_id);
   if (!team) {
     document.getElementById('player-report-content').innerHTML = '<p>Team not found.</p>';
@@ -88,11 +92,13 @@ export async function renderPlayerReport(playerId, sessionId) {
     // Delta vs previous
     let deltaHtml = '';
     if (prev !== null) {
-      const improved = cfg.higherIsBetter ? current > prev : current < prev;
-      const diff = Math.abs(current - prev).toFixed(1);
-      const sign = improved ? '▲' : '▼';
-      const cls  = improved ? 'up' : 'down';
-      deltaHtml = `<span class="metric-delta ${cls}">${sign} ${diff}</span>`;
+      const diff = Math.abs(current - prev);
+      if (diff > 0.001) {
+        const improved = cfg.higherIsBetter ? current > prev : current < prev;
+        const sign = improved ? '▲' : '▼';
+        const cls  = improved ? 'up' : 'down';
+        deltaHtml = `<span class="metric-delta ${cls}">${sign} ${diff.toFixed(1)}</span>`;
+      }
     }
 
     const displayCurrent = metric === 'mas'
@@ -101,6 +107,14 @@ export async function renderPlayerReport(playerId, sessionId) {
     const displayPrev = prev !== null && metric === 'mas'
       ? formatMas(prevResult.mas_min, prevResult.mas_sec)
       : prev;
+
+    const fmtStat = (val) => {
+      if (metric === 'mas') {
+        const s = Math.round(val);
+        return formatMas(Math.floor(s / 60), s % 60);
+      }
+      return val.toFixed(1);
+    };
 
     body.insertAdjacentHTML('beforeend', `
       <div class="metric-row">
@@ -120,9 +134,9 @@ export async function renderPlayerReport(playerId, sessionId) {
             : ''}
         </div>
         <div class="metric-row-meta">
-          <span>Team min: ${stats.min.toFixed(1)}</span>
-          <span>Team avg: ${stats.avg.toFixed(1)}${prev !== null ? ` · Prev: ${displayPrev}` : ''}</span>
-          <span>Team best: ${stats.max.toFixed(1)}</span>
+          <span>Team min: ${fmtStat(stats.min)}</span>
+          <span>Team avg: ${fmtStat(stats.avg)}${prev !== null ? ` · Prev: ${displayPrev}` : ''}</span>
+          <span>Team best: ${fmtStat(stats.max)}</span>
         </div>
       </div>
     `);
