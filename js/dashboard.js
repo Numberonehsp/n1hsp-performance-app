@@ -30,7 +30,7 @@ export async function renderDashboard() {
         <div class="team-card-header">
           <div>
             <div class="team-name">${team.name}</div>
-            <div class="team-type badge badge-${team.type.toLowerCase()}">${team.type}</div>
+            <div class="team-type badge badge-${(team.type || '').toLowerCase()}">${team.type}</div>
           </div>
           <div class="team-actions">
             <button type="button" class="btn-primary btn-sm btn-new-session"
