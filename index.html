@@ -21,23 +21,23 @@
         <span class="brand-hsp">HEALTH · STRENGTH · PERFORMANCE</span>
       </div>
       <h1>Performance Testing</h1>
-      <button id="btn-signin" class="btn-primary btn-large">Sign in with Google</button>
+      <button type="button" id="btn-signin" class="btn-primary btn-large">Sign in with Google</button>
     </div>
   </div>
 
   <div id="view-dashboard" class="view hidden">
     <header class="app-header">
       <div class="brand-small">N<span>1</span> HSP</div>
-      <button id="btn-signout" class="btn-text">Sign out</button>
+      <button type="button" id="btn-signout" class="btn-text">Sign out</button>
     </header>
     <main id="dashboard-content" class="content-area"></main>
   </div>
 
   <div id="view-entry" class="view hidden">
     <header class="app-header">
-      <button class="btn-back" onclick="history.back()">← Back</button>
+      <button type="button" class="btn-back" onclick="history.back()">← Back</button>
       <span id="entry-title" class="header-title"></span>
-      <button id="btn-save-session" class="btn-primary" disabled>Save</button>
+      <button type="button" id="btn-save-session" class="btn-primary" disabled>Save</button>
     </header>
     <div id="player-strip-container"></div>
     <main id="entry-form-container" class="content-area"></main>
@@ -45,18 +45,18 @@
 
   <div id="view-team-report" class="view hidden">
     <header class="app-header no-print">
-      <button class="btn-back" onclick="history.back()">← Back</button>
+      <button type="button" class="btn-back" onclick="history.back()">← Back</button>
       <span class="header-title">Team Report</span>
-      <button class="btn-primary" onclick="window.print()">Print / PDF</button>
+      <button type="button" class="btn-primary" onclick="window.print()">Print / PDF</button>
     </header>
     <main id="team-report-content"></main>
   </div>
 
   <div id="view-player-report" class="view hidden">
     <header class="app-header no-print">
-      <button class="btn-back" onclick="history.back()">← Back</button>
+      <button type="button" class="btn-back" onclick="history.back()">← Back</button>
       <span class="header-title">Player Report</span>
-      <button class="btn-primary" onclick="window.print()">Print / PDF</button>
+      <button type="button" class="btn-primary" onclick="window.print()">Print / PDF</button>
     </header>
     <main id="player-report-content"></main>
   </div>
