@@ -1,0 +1,111 @@
+:root {
+  --teal: #1a6b5c;
+  --teal-dark: #0d4a3f;
+  --red: #8b0000;
+  --red-light: #a00000;
+  --green: #2d6a4f;
+  --green-light: #52b788;
+  --blue-light: #4fc3f7;
+  --text: #1a1a1a;
+  --text-muted: #666;
+  --text-faint: #aaa;
+  --bg: #f4f4f4;
+  --bg-card: #ffffff;
+  --border: #e0e0e0;
+  --shadow: 0 1px 4px rgba(0,0,0,0.1);
+  --radius: 8px;
+  --header-h: 56px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg); color: var(--text); font-size: 16px; }
+
+.hidden { display: none !important; }
+
+.view { min-height: 100vh; }
+
+/* Sign-in */
+#view-signin {
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, var(--teal) 0%, var(--teal-dark) 100%);
+}
+.signin-card {
+  background: white; border-radius: 16px; padding: 48px 40px;
+  text-align: center; max-width: 380px; width: 90%;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+.brand-lockup { margin-bottom: 24px; }
+.brand-number { display: block; font-size: 12px; font-weight: 700;
+  letter-spacing: 2px; color: var(--text-muted); }
+.brand-o1ne { display: block; font-size: 48px; font-weight: 900;
+  color: var(--teal); line-height: 1; }
+.brand-one { color: var(--red); }
+.brand-hsp { display: block; font-size: 10px; letter-spacing: 2px;
+  color: var(--text-faint); margin-top: 4px; }
+.signin-card h1 { font-size: 20px; margin-bottom: 32px; color: var(--text); }
+
+/* App header */
+.app-header {
+  position: sticky; top: 0; z-index: 100;
+  height: var(--header-h);
+  background: var(--teal); color: white;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 16px; gap: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.brand-small { font-size: 18px; font-weight: 900; color: white; }
+.brand-small span { color: var(--red-light); }
+.header-title { font-size: 15px; font-weight: 600; flex: 1;
+  text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Buttons */
+.btn-primary {
+  background: var(--red); color: white; border: none;
+  padding: 10px 18px; border-radius: 6px; font-size: 14px;
+  font-weight: 700; cursor: pointer; white-space: nowrap;
+}
+.btn-primary:disabled { background: #999; cursor: not-allowed; }
+.btn-primary:not(:disabled):hover { background: var(--red-light); }
+.btn-large { padding: 14px 32px; font-size: 16px; }
+.btn-text { background: none; border: none; color: rgba(255,255,255,0.8);
+  font-size: 14px; cursor: pointer; padding: 4px 8px; }
+.btn-text:hover { color: white; }
+.btn-back { background: none; border: none; color: white;
+  font-size: 14px; cursor: pointer; padding: 4px 8px; white-space: nowrap; }
+
+/* Content area */
+.content-area { padding: 16px; max-width: 900px; margin: 0 auto; }
+
+/* Cards */
+.card {
+  background: var(--bg-card); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 16px; margin-bottom: 12px;
+}
+
+/* Loading state */
+.loading { text-align: center; padding: 48px; color: var(--text-muted); }
+
+/* Dashboard */
+.dashboard-club { margin-bottom: 24px; }
+.club-name { font-size: 20px; font-weight: 800; color: var(--teal);
+  margin-bottom: 10px; padding-bottom: 6px; border-bottom: 2px solid var(--teal); }
+.team-card-header { display: flex; justify-content: space-between;
+  align-items: flex-start; margin-bottom: 10px; }
+.team-name { font-size: 16px; font-weight: 700; }
+.badge { display: inline-block; font-size: 10px; font-weight: 700;
+  padding: 2px 8px; border-radius: 20px; margin-top: 4px; text-transform: uppercase; }
+.badge-senior { background: var(--teal); color: white; }
+.badge-academy { background: #e0f2fe; color: #0369a1; }
+.btn-sm { padding: 7px 12px; font-size: 13px; }
+.team-last-session { font-size: 13px; color: var(--text-muted); }
+.link-view-report { color: var(--teal); text-decoration: none; margin-left: 12px;
+  font-weight: 600; font-size: 13px; }
+.link-view-report:hover { text-decoration: underline; }
+.text-muted { color: var(--text-muted); }
+.past-sessions { margin-top: 8px; font-size: 13px; }
+.past-sessions summary { cursor: pointer; color: var(--text-muted); }
+.past-session-row { display: flex; justify-content: space-between;
+  padding: 4px 0; border-bottom: 1px solid var(--border); }
+.past-session-row a { color: var(--teal); text-decoration: none; }
