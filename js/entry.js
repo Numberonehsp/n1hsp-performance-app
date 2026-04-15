@@ -1,4 +1,4 @@
-import { getData, findPreviousSession, getPlayerResult, getDisplayValue,
+import { getData, getPlayerResult, getDisplayValue,
          getMetricsForTeamType, saveSession } from './data.js';
 import { METRIC_CONFIG } from './config.js';
 import { navigate } from './router.js';
@@ -18,11 +18,14 @@ export async function renderEntry(teamId, date) {
   currentPlayers = players.filter(p => p.team_id === teamId);
   resultsMap = {};
   skippedSet = new Set();
+  currentPlayerIndex = 0;
 
   // Find the previous session for this team to show comparison values
-  const teamSessions = sessions.filter(s => s.team_id === teamId);
   // There's no currentSessionId yet (session created on save), so we take the latest existing
-  const latestPrev = teamSessions.sort((a, b) => b.date.localeCompare(a.date))[0];
+  const teamSessions = [...sessions
+    .filter(s => s.team_id === teamId)]
+    .sort((a, b) => b.date.localeCompare(a.date));
+  const latestPrev = teamSessions[0];
   previousResults = {};
   currentPlayers.forEach(p => {
     previousResults[p.id] = latestPrev
@@ -36,6 +39,7 @@ export async function renderEntry(teamId, date) {
 
   renderPlayerStrip();
   selectPlayer(0);
+  updateSaveButton();
 }
 
 function renderPlayerStrip() {
@@ -111,9 +115,9 @@ function renderForm(player) {
 
 function renderMetricField(metric, saved, prev) {
   const cfg = METRIC_CONFIG[metric];
-  const prevDisplay = prev ? ` Previous: ${prev.mas_min !== undefined && metric === 'mas'
-    ? `${prev.mas_min}:${String(prev.mas_sec).padStart(2,'0')}`
-    : (prev[metric] || '—')} ${cfg.unit}` : '';
+  const prevDisplay = prev
+    ? `Previous: ${getDisplayValue(prev, metric)} ${cfg.unit}`
+    : '';
 
   if (metric === 'mas') {
     return `
