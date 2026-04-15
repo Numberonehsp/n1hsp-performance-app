@@ -1,0 +1,95 @@
+/* Report shared */
+.report-header {
+  background: linear-gradient(135deg, var(--teal) 0%, var(--teal-dark) 100%);
+  padding: 24px; color: white; display: flex;
+  justify-content: space-between; align-items: flex-start;
+}
+.report-club-logo { width: 60px; height: 60px; object-fit: contain; margin-right: 16px; }
+.report-header-text h1 { font-size: 22px; font-weight: 900; }
+.report-header-text p { font-size: 14px; opacity: 0.8; margin-top: 2px; }
+.report-brand { text-align: right; }
+.report-brand-name { font-size: 20px; font-weight: 900; }
+.report-brand-one { color: var(--red-light); }
+.report-brand-sub { font-size: 9px; letter-spacing: 2px; opacity: 0.7; margin-top: 2px; }
+
+/* Summary strip */
+.summary-strip {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  padding: 16px; background: var(--bg);
+}
+.summary-card {
+  flex: 1; min-width: 80px; background: white; border-radius: var(--radius);
+  padding: 12px; text-align: center; box-shadow: var(--shadow);
+}
+.summary-card-label { font-size: 10px; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 4px; }
+.summary-card-value { font-size: 20px; font-weight: 900; color: var(--teal); }
+.summary-card-unit { font-size: 11px; color: var(--text-faint); }
+
+/* Chart section */
+.chart-section { padding: 16px; }
+.chart-title {
+  font-size: 16px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--red); margin-bottom: 12px;
+}
+.chart-wrapper { position: relative; height: 300px; background: white;
+  border-radius: var(--radius); padding: 12px; box-shadow: var(--shadow); }
+
+/* Player name link in chart */
+.player-name-link { color: var(--teal); cursor: pointer; text-decoration: underline; }
+
+/* Player report progress bars */
+.player-report-header { padding: 0 16px 16px; }
+.player-report-header h2 { font-size: 24px; font-weight: 900; color: var(--teal); margin-top: 12px; }
+.player-report-header p { font-size: 14px; color: var(--text-muted); }
+
+.metric-row { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+.metric-row:last-child { border-bottom: none; }
+.metric-row-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.metric-row-label { font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--text-muted); }
+.metric-row-score { font-size: 22px; font-weight: 900; color: var(--text); }
+.metric-row-unit { font-size: 13px; color: var(--text-muted); margin-left: 4px; }
+.metric-delta { font-size: 13px; font-weight: 700; margin-left: 8px; }
+.metric-delta.up { color: var(--green-light); }
+.metric-delta.down { color: #e55; }
+
+.progress-track { position: relative; height: 12px; background: #eee;
+  border-radius: 6px; margin: 8px 0; overflow: visible; }
+.progress-fill { position: absolute; left: 0; height: 100%;
+  background: var(--red); border-radius: 6px; }
+.progress-avg { position: absolute; top: -4px; width: 3px; height: 20px;
+  background: #333; border-radius: 2px; }
+.progress-prev { position: absolute; top: -5px; width: 10px; height: 10px;
+  background: white; border: 2.5px solid var(--blue-light); border-radius: 50%;
+  transform: translateX(-50%); }
+
+.metric-row-meta { display: flex; justify-content: space-between;
+  font-size: 11px; color: var(--text-faint); margin-top: 4px; }
+
+/* Section header within player report */
+.metric-section-header {
+  padding: 10px 16px 6px; font-size: 12px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 1px; color: var(--teal);
+  background: #f0faf6; border-top: 2px solid var(--teal);
+}
+
+/* Report footer */
+.report-footer {
+  background: var(--teal-dark); color: white; text-align: center;
+  padding: 20px; font-size: 12px; margin-top: 24px;
+}
+.report-footer a { color: var(--green-light); }
+
+/* Print */
+@media print {
+  .no-print { display: none !important; }
+  body { background: white; }
+  .app-header { display: none !important; }
+  .chart-wrapper { height: 260px; box-shadow: none; border: 1px solid #ddd; }
+  .chart-section { page-break-inside: avoid; page-break-after: always; }
+  .chart-section:last-of-type { page-break-after: auto; }
+  .metric-row { page-break-inside: avoid; }
+  .report-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .progress-fill, .progress-avg, .progress-prev { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
