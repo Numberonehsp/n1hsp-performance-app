@@ -131,6 +131,24 @@ describe('sortResultsByMetric', () => {
   });
 });
 
+describe('getNumericValue', () => {
+  it('returns null for null result', () => {
+    expect(getNumericValue(null, 'cmj')).toBeNull();
+  });
+
+  it('returns null for empty MAS fields', () => {
+    expect(getNumericValue({ mas_min: '', mas_sec: '' }, 'mas')).toBeNull();
+  });
+
+  it('returns seconds for valid MAS result', () => {
+    expect(getNumericValue({ mas_min: '4', mas_sec: '06' }, 'mas')).toBe(246);
+  });
+
+  it('returns null for missing numeric field', () => {
+    expect(getNumericValue({ cmj: '' }, 'cmj')).toBeNull();
+  });
+});
+
 describe('getMetricsForTeamType', () => {
   it('returns base metrics for Academy', () => {
     const m = getMetricsForTeamType('Academy');

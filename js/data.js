@@ -22,6 +22,7 @@ export function getData() {
 export function findPreviousSession(sessions, teamId, currentSessionId) {
   const current = sessions.find(s => s.id === currentSessionId);
   if (!current) return null;
+  // Requires dates stored as ISO 8601 YYYY-MM-DD strings for correct lexicographic comparison
   const earlier = sessions
     .filter(s => s.team_id === teamId && s.id !== currentSessionId && s.date < current.date)
     .sort((a, b) => b.date.localeCompare(a.date));
@@ -42,7 +43,10 @@ export function formatMas(min, sec) {
 
 export function getNumericValue(result, metric) {
   if (!result) return null;
-  if (metric === 'mas') return masToSeconds(result.mas_min, result.mas_sec);
+  if (metric === 'mas') {
+    if (!result.mas_min && !result.mas_sec) return null;
+    return masToSeconds(result.mas_min, result.mas_sec);
+  }
   const v = parseFloat(result[metric]);
   return isNaN(v) ? null : v;
 }
@@ -53,7 +57,8 @@ export function getDisplayValue(result, metric) {
     if (!result.mas_min && !result.mas_sec) return '—';
     return formatMas(result.mas_min, result.mas_sec);
   }
-  return result[metric] || '—';
+  const v = result[metric];
+  return (v !== null && v !== undefined && v !== '') ? String(v) : '—';
 }
 
 export function computeMetricStats(results, metric) {
@@ -82,7 +87,7 @@ export async function saveSession(teamId, date, resultsMap) {
   const sessionId = `sess_${Date.now()}`;
   await appendRow('sessions', [sessionId, teamId, date]);
   for (const [playerId, r] of Object.entries(resultsMap)) {
-    const rowId = `res_${Date.now()}_${playerId}`;
+    const rowId = `res_${sessionId}_${playerId}`;
     await appendRow('results', [
       rowId, sessionId, playerId,
       r.height ?? '', r.weight ?? '', r.cmj ?? '', r.sprint_20m ?? '',
