@@ -186,36 +186,6 @@ export async function renderTeamReport(sessionId) {
           },
         },
         plugins: [{
-          id: 'barLabels',
-          afterDraw(chart) {
-            const ctx = chart.ctx;
-            const dataset = chart.data.datasets[0];
-            const meta = chart.getDatasetMeta(0);
-
-            if (!meta || !meta.data) return;
-
-            ctx.save();
-            ctx.font = 'bold 11px sans-serif';
-            ctx.fillStyle = 'white';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'bottom';
-
-            meta.data.forEach((element, index) => {
-              if (!element) return;
-              const value = dataset.data[index];
-              const label = metric === 'mas'
-                ? (() => { const s = Math.round(value); return formatMas(Math.floor(s / 60), s % 60); })()
-                : parseFloat(value.toFixed(2));
-
-              // Draw label at base of bar, 8px down from top
-              const x = element.x;
-              const y = element.y + 8;
-              ctx.fillText(label, x, y);
-            });
-
-            ctx.restore();
-          },
-        }, {
           id: 'avgLines',
           afterDraw(chart) {
             const { ctx, chartArea, scales } = chart;
@@ -273,6 +243,27 @@ export async function renderTeamReport(sessionId) {
               ctx.fill();
               ctx.stroke();
             });
+
+            // Draw bar labels on top (after everything else)
+            const dataset = chart.data.datasets[0];
+            const meta = chart.getDatasetMeta(0);
+            if (meta && meta.data) {
+              ctx.font = 'bold 11px sans-serif';
+              ctx.fillStyle = 'white';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'bottom';
+
+              meta.data.forEach((element, index) => {
+                if (!element) return;
+                const value = dataset.data[index];
+                const label = metric === 'mas'
+                  ? (() => { const s = Math.round(value); return formatMas(Math.floor(s / 60), s % 60); })()
+                  : parseFloat(value.toFixed(2));
+                const x = element.x;
+                const y = element.y + 8;
+                ctx.fillText(label, x, y);
+              });
+            }
 
             ctx.restore();
           },
