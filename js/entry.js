@@ -1,5 +1,5 @@
 import { getData, getPlayerResult, getDisplayValue,
-         getMetricsForTeamType, saveSession } from './data.js';
+         getMetricsForTeamType, saveSession, loadAllData } from './data.js';
 import { METRIC_CONFIG } from './config.js';
 import { navigate } from './router.js';
 
@@ -193,6 +193,7 @@ async function handleSave(teamId, date) {
   btn.textContent = 'Saving…';
   try {
     const sessionId = await saveSession(teamId, date, resultsMap);
+    await loadAllData();
     navigate('team-report', { sessionId });
   } catch (err) {
     console.error(err);
