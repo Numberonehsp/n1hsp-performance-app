@@ -167,21 +167,6 @@ export async function renderTeamReport(sessionId) {
                 },
               },
             },
-            // Scores inside bars
-            datalabels: {
-              display: true,
-              anchor: 'center',
-              align: 'center',
-              color: 'rgba(255,255,255,0.95)',
-              font: { size: 11, weight: 'bold' },
-              formatter: (value) => {
-                if (metric === 'mas') {
-                  const s = Math.round(value);
-                  return formatMas(Math.floor(s / 60), s % 60);
-                }
-                return parseFloat(value.toFixed(2));
-              },
-            },
           },
           scales: {
             y: {
@@ -201,6 +186,28 @@ export async function renderTeamReport(sessionId) {
           },
         },
         plugins: [{
+          id: 'barLabels',
+          afterDatasetsDraw(chart) {
+            const { ctx, data, scales } = chart;
+            ctx.save();
+            ctx.font = 'bold 10px sans-serif';
+            ctx.fillStyle = 'rgba(255,255,255,0.95)';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            const dataset = data.datasets[0];
+            const meta = chart.getDatasetMeta(0);
+            meta.data.forEach((bar, i) => {
+              const value = dataset.data[i];
+              const label = metric === 'mas'
+                ? (() => { const s = Math.round(value); return formatMas(Math.floor(s / 60), s % 60); })()
+                : parseFloat(value.toFixed(2));
+              ctx.fillText(label, bar.x, bar.y - 5);
+            });
+
+            ctx.restore();
+          },
+        }, {
           id: 'avgLines',
           afterDraw(chart) {
             const { ctx, chartArea, scales } = chart;
