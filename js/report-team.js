@@ -260,7 +260,7 @@ export async function renderTeamReport(sessionId) {
                   ? (() => { const s = Math.round(value); return formatMas(Math.floor(s / 60), s % 60); })()
                   : parseFloat(value.toFixed(2));
                 const x = element.x;
-                const y = element.y + 14;
+                const y = element.y + 20;
                 ctx.fillText(label, x, y);
               });
             }
