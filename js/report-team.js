@@ -207,10 +207,10 @@ export async function renderTeamReport(sessionId) {
                 ? (() => { const s = Math.round(value); return formatMas(Math.floor(s / 60), s % 60); })()
                 : parseFloat(value.toFixed(2));
 
-              // Draw label above the bar
+              // Draw label centered inside the bar
               const x = element.x;
-              const y = element.y - 8;
-              ctx.fillText(label, x, y);
+              const centerY = (element.y + element.base) / 2;
+              ctx.fillText(label, x, centerY + 3);
             });
 
             ctx.restore();
