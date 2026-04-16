@@ -207,10 +207,9 @@ export async function renderTeamReport(sessionId) {
                 ? (() => { const s = Math.round(value); return formatMas(Math.floor(s / 60), s % 60); })()
                 : parseFloat(value.toFixed(2));
 
-              // Draw label inside the bar, positioned 1/4 down from top
+              // Draw label at base of bar, 8px down from top
               const x = element.x;
-              const barHeight = Math.abs(element.height || 30);
-              const y = element.y + (barHeight / 3);
+              const y = element.y + 8;
               ctx.fillText(label, x, y);
             });
 
