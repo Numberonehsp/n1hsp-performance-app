@@ -79,6 +79,30 @@
 }
 .report-footer a { color: var(--green-light); }
 
+/* Session selector bar */
+.session-selector-bar {
+  background: white; padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+}
+.session-selector-bar label {
+  font-size: 13px; font-weight: 600; color: var(--text-muted); white-space: nowrap;
+}
+.session-selector-bar select {
+  padding: 6px 10px; border: 1px solid var(--border);
+  border-radius: 6px; font-size: 14px; background: white; color: var(--text);
+  cursor: pointer;
+}
+
+/* Player links section */
+.player-links-section { padding: 16px; }
+.player-links-heading { margin-bottom: 12px; font-size: 15px; color: var(--teal); }
+.player-links-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Print All — page break between each player */
+.print-player-section { break-before: page; page-break-before: always; }
+.print-player-section:first-child { break-before: auto; page-break-before: auto; }
+
 /* Print */
 @media print {
   .no-print { display: none !important; }

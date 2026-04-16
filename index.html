@@ -10,6 +10,7 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js" async defer></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2/dist/chartjs-plugin-datalabels.min.js" defer></script>
 </head>
 <body>
 
@@ -57,6 +58,15 @@
       <button type="button" class="btn-primary" onclick="window.print()">Print / PDF</button>
     </header>
     <main id="player-report-content"></main>
+  </div>
+
+  <div id="view-print-all" class="view hidden">
+    <header class="app-header no-print">
+      <button type="button" class="btn-back" onclick="history.back()">← Back</button>
+      <span class="header-title">All Player Reports</span>
+      <button type="button" class="btn-primary" onclick="window.print()">Print / PDF</button>
+    </header>
+    <main id="print-all-content"></main>
   </div>
 
   <script type="module" src="js/app.js"></script>

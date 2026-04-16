@@ -1,6 +1,7 @@
-import { getData, findPreviousSession, getPlayerResult, computeMetricStats,
-         sortResultsByMetric, getDisplayValue, getNumericValue, formatMas } from './data.js';
+import { getData, findPreviousSession, computeMetricStats,
+         sortResultsByMetric, getNumericValue, formatMas } from './data.js';
 import { METRIC_CONFIG, METRICS_ALL, METRICS_SENIOR } from './config.js';
+
 export async function renderTeamReport(sessionId) {
   if (!getData()) {
     document.getElementById('team-report-content').innerHTML = '<p>Loading data…</p>';
@@ -34,8 +35,30 @@ export async function renderTeamReport(sessionId) {
     ? results.filter(r => r.session_id === prevSession.id)
     : [];
 
+  // All sessions for this team, newest first (for dropdown)
+  const teamSessions = [...sessions.filter(s => s.team_id === team.id)]
+    .sort((a, b) => b.date.localeCompare(a.date));
+
   const container = document.getElementById('team-report-content');
   container.innerHTML = '';
+
+  // Session selector bar (hidden when printing)
+  if (teamSessions.length > 1) {
+    const selectorBar = document.createElement('div');
+    selectorBar.className = 'session-selector-bar no-print';
+    selectorBar.innerHTML = `
+      <label for="session-select">Session date:</label>
+      <select id="session-select">
+        ${teamSessions.map(s =>
+          `<option value="${s.id}" ${s.id === sessionId ? 'selected' : ''}>${s.date}</option>`
+        ).join('')}
+      </select>
+    `;
+    container.appendChild(selectorBar);
+    selectorBar.querySelector('#session-select').addEventListener('change', (e) => {
+      window.location.hash = `team-report?sessionId=${e.target.value}`;
+    });
+  }
 
   // Header
   container.insertAdjacentHTML('beforeend', `
@@ -82,6 +105,11 @@ export async function renderTeamReport(sessionId) {
     if (sorted.length === 0) return;
 
     const stats = computeMetricStats(sorted, metric);
+    const prevFilteredResults = prevResults.filter(r => getNumericValue(r, metric) !== null);
+    const prevStats = prevFilteredResults.length > 0
+      ? computeMetricStats(prevFilteredResults, metric)
+      : null;
+
     const playerNames = sorted.map(r => {
       const p = teamPlayers.find(p => p.id === r.player_id);
       return p ? p.name : r.player_id;
@@ -128,15 +156,32 @@ export async function renderTeamReport(sessionId) {
                     const s = Math.round(val);
                     return formatMas(Math.floor(s / 60), s % 60);
                   }
-                  return `${val} ${cfg.unit}`;
+                  return `${parseFloat(val.toFixed(2))} ${cfg.unit}`;
                 },
                 afterLabel: (ctx) => {
                   const prev = prevValues[ctx.dataIndex];
                   if (prev === null) return '';
                   const diff = cfg.higherIsBetter ? ctx.raw - prev : prev - ctx.raw;
                   const sign = diff >= 0 ? '+' : '';
-                  return `vs prev: ${sign}${diff.toFixed(1)}`;
+                  return `vs prev: ${sign}${diff.toFixed(2)}`;
                 },
+              },
+            },
+            // Scores inside bars, rotated vertically
+            datalabels: {
+              display: true,
+              anchor: 'start',
+              align: 'end',
+              offset: 4,
+              rotation: -90,
+              color: 'rgba(255,255,255,0.92)',
+              font: { size: 10, weight: 'bold' },
+              formatter: (value) => {
+                if (metric === 'mas') {
+                  const s = Math.round(value);
+                  return formatMas(Math.floor(s / 60), s % 60);
+                }
+                return parseFloat(value.toFixed(2));
               },
             },
           },
@@ -144,12 +189,13 @@ export async function renderTeamReport(sessionId) {
             y: {
               beginAtZero: false,
               ticks: {
+                // Fix: no excessive decimals on Y axis
                 callback: (v) => {
                   if (metric === 'mas') {
                     const s = Math.round(v);
                     return formatMas(Math.floor(s / 60), s % 60);
                   }
-                  return v;
+                  return parseFloat(v.toFixed(2));
                 },
               },
             },
@@ -157,14 +203,15 @@ export async function renderTeamReport(sessionId) {
           },
         },
         plugins: [{
-          id: 'avgAndPrev',
+          id: 'avgLines',
           afterDraw(chart) {
             const { ctx, chartArea, scales } = chart;
-            const { top, bottom, left, right } = chartArea;
+            const { left, right } = chartArea;
 
-            // Dashed average line
-            const avgY = scales.y.getPixelForValue(stats.avg);
             ctx.save();
+
+            // Current session average — dark dashed line
+            const avgY = scales.y.getPixelForValue(stats.avg);
             ctx.strokeStyle = '#333';
             ctx.lineWidth = 1.5;
             ctx.setLineDash([6, 4]);
@@ -172,9 +219,34 @@ export async function renderTeamReport(sessionId) {
             ctx.moveTo(left, avgY);
             ctx.lineTo(right, avgY);
             ctx.stroke();
+            const avgLabel = metric === 'mas'
+              ? (() => { const s = Math.round(stats.avg); return formatMas(Math.floor(s / 60), s % 60); })()
+              : `Avg: ${parseFloat(stats.avg.toFixed(2))}`;
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 10px sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText(avgLabel, right - 4, avgY - 4);
+
+            // Previous session average — blue dashed line
+            if (prevStats && prevStats.count > 0) {
+              const prevAvgY = scales.y.getPixelForValue(prevStats.avg);
+              ctx.strokeStyle = '#4fc3f7';
+              ctx.lineWidth = 1.5;
+              ctx.setLineDash([4, 4]);
+              ctx.beginPath();
+              ctx.moveTo(left, prevAvgY);
+              ctx.lineTo(right, prevAvgY);
+              ctx.stroke();
+              const prevAvgLabel = metric === 'mas'
+                ? (() => { const s = Math.round(prevStats.avg); return formatMas(Math.floor(s / 60), s % 60); })()
+                : `Prev avg: ${parseFloat(prevStats.avg.toFixed(2))}`;
+              ctx.fillStyle = '#4fc3f7';
+              ctx.fillText(prevAvgLabel, right - 4, prevAvgY - 4);
+            }
+
             ctx.setLineDash([]);
 
-            // Previous score dots
+            // Previous score dots per player
             prevValues.forEach((prev, i) => {
               if (prev === null) return;
               const meta = chart.getDatasetMeta(0).data[i];
@@ -196,19 +268,28 @@ export async function renderTeamReport(sessionId) {
     });
   });
 
-  // Individual player report links
+  // Individual player links + Print All button
+  const playersWithResults = teamPlayers
+    .filter(p => sessionResults.some(r => r.player_id === p.id));
   const playerLinks = document.createElement('div');
-  playerLinks.style.cssText = 'padding: 16px;';
+  playerLinks.className = 'player-links-section';
   playerLinks.innerHTML = `
-    <h3 style="margin-bottom:12px;font-size:15px;color:var(--teal)">Individual Player Reports</h3>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;">
-      ${teamPlayers
-        .filter(p => sessionResults.some(r => r.player_id === p.id))
+    <h3 class="player-links-heading">Individual Player Reports</h3>
+    <div class="player-links-grid">
+      ${playersWithResults
         .map(p => `<a class="player-name-link"
           href="#player-report?playerId=${p.id}&sessionId=${sessionId}">${p.name}</a>`)
         .join('')}
-    </div>`;
+    </div>
+    <button type="button" class="btn-primary no-print" id="btn-print-all" style="margin-top:12px;">
+      Print All Players (PDF)
+    </button>
+  `;
   container.appendChild(playerLinks);
+
+  document.getElementById('btn-print-all').addEventListener('click', () => {
+    window.location.hash = `print-all?sessionId=${sessionId}`;
+  });
 
   // Footer
   container.insertAdjacentHTML('beforeend', `

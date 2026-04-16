@@ -5,12 +5,14 @@ import { renderDashboard } from './dashboard.js';
 import { renderEntry } from './entry.js';
 import { renderTeamReport } from './report-team.js';
 import { renderPlayerReport } from './report-player.js';
+import { renderPrintAll } from './print-all.js';
 
 const VIEW_IDS = {
   dashboard: 'view-dashboard',
   entry: 'view-entry',
   'team-report': 'view-team-report',
   'player-report': 'view-player-report',
+  'print-all': 'view-print-all',
 };
 
 function showView(name) {
@@ -38,6 +40,10 @@ async function route() {
     case 'player-report':
       showView('player-report');
       await renderPlayerReport(params.playerId, params.sessionId);
+      break;
+    case 'print-all':
+      showView('print-all');
+      await renderPrintAll(params.sessionId);
       break;
     default:
       navigate('dashboard');

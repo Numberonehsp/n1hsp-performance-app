@@ -2,32 +2,35 @@ import { getData, findPreviousSession, getPlayerResult, computeMetricStats,
          getNumericValue, formatMas } from './data.js';
 import { METRIC_CONFIG, METRICS_ALL, METRICS_SENIOR } from './config.js';
 
-export async function renderPlayerReport(playerId, sessionId) {
+export async function renderPlayerReport(playerId, sessionId, containerEl = null) {
+  const defaultContainer = document.getElementById('player-report-content');
+  const container = containerEl || defaultContainer;
+
   if (!getData()) {
-    document.getElementById('player-report-content').innerHTML = '<p>Loading data…</p>';
+    container.innerHTML = '<p>Loading data…</p>';
     return;
   }
 
   const { clubs, teams, players, sessions, results } = getData();
   const session = sessions.find(s => s.id === sessionId);
   if (!session) {
-    document.getElementById('player-report-content').innerHTML = '<p>Session not found.</p>';
+    container.innerHTML = '<p>Session not found.</p>';
     return;
   }
 
   const player = players.find(p => p.id === playerId);
   if (!player) {
-    document.getElementById('player-report-content').innerHTML = '<p>Player not found.</p>';
+    container.innerHTML = '<p>Player not found.</p>';
     return;
   }
   const team = teams.find(t => t.id === session.team_id);
   if (!team) {
-    document.getElementById('player-report-content').innerHTML = '<p>Team not found.</p>';
+    container.innerHTML = '<p>Team not found.</p>';
     return;
   }
   const club = clubs.find(c => c.id === team.club_id);
   if (!club) {
-    document.getElementById('player-report-content').innerHTML = '<p>Club not found.</p>';
+    container.innerHTML = '<p>Club not found.</p>';
     return;
   }
 
@@ -40,7 +43,6 @@ export async function renderPlayerReport(playerId, sessionId) {
   const prevSession = findPreviousSession(sessions, team.id, sessionId);
   const prevResult = prevSession ? getPlayerResult(results, playerId, prevSession.id) : null;
 
-  const container = document.getElementById('player-report-content');
   container.innerHTML = '';
 
   // Header
