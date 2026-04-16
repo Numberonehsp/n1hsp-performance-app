@@ -167,15 +167,13 @@ export async function renderTeamReport(sessionId) {
                 },
               },
             },
-            // Scores inside bars, rotated vertically
+            // Scores inside bars
             datalabels: {
               display: true,
-              anchor: 'start',
-              align: 'end',
-              offset: 4,
-              rotation: -90,
-              color: 'rgba(255,255,255,0.92)',
-              font: { size: 10, weight: 'bold' },
+              anchor: 'center',
+              align: 'center',
+              color: 'rgba(255,255,255,0.95)',
+              font: { size: 11, weight: 'bold' },
               formatter: (value) => {
                 if (metric === 'mas') {
                   const s = Math.round(value);
