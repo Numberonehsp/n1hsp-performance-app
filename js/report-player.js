@@ -55,8 +55,7 @@ export async function renderPlayerReport(playerId, sessionId) {
         </div>
       </div>
       <div class="report-brand">
-        <div class="report-brand-name">NUMBER O<span class="report-brand-one">1</span>NE</div>
-        <div class="report-brand-sub">HEALTH · STRENGTH · PERFORMANCE</div>
+        <img src="assests/logo-white.png" alt="Number ONE HSP" class="report-brand-logo">
       </div>
     </div>
   `);

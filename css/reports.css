@@ -7,10 +7,8 @@
 .report-club-logo { width: 60px; height: 60px; object-fit: contain; margin-right: 16px; }
 .report-header-text h1 { font-size: 22px; font-weight: 900; }
 .report-header-text p { font-size: 14px; opacity: 0.8; margin-top: 2px; }
-.report-brand { text-align: right; }
-.report-brand-name { font-size: 20px; font-weight: 900; }
-.report-brand-one { color: var(--red-light); }
-.report-brand-sub { font-size: 9px; letter-spacing: 2px; opacity: 0.7; margin-top: 2px; }
+.report-brand { text-align: right; display: flex; align-items: flex-start; justify-content: flex-end; }
+.report-brand-logo { height: 56px; width: auto; display: block; }
 
 /* Summary strip */
 .summary-strip {

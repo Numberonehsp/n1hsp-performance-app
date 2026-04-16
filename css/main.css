@@ -37,13 +37,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   box-shadow: 0 8px 32px rgba(0,0,0,0.2);
 }
 .brand-lockup { margin-bottom: 24px; }
-.brand-number { display: block; font-size: 12px; font-weight: 700;
-  letter-spacing: 2px; color: var(--text-muted); }
-.brand-o1ne { display: block; font-size: 48px; font-weight: 900;
-  color: var(--teal); line-height: 1; }
-.brand-one { color: var(--red); }
-.brand-hsp { display: block; font-size: 10px; letter-spacing: 2px;
-  color: var(--text-faint); margin-top: 4px; }
+.brand-logo { width: 100%; max-width: 260px; height: auto; display: block; margin: 0 auto; }
 .signin-card h1 { font-size: 20px; margin-bottom: 32px; color: var(--text); }
 
 /* App header */
@@ -55,8 +49,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   padding: 0 16px; gap: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
-.brand-small { font-size: 18px; font-weight: 900; color: white; }
-.brand-small span { color: var(--red-light); }
+.brand-logo-header { height: 36px; width: auto; display: block; }
 .header-title { font-size: 15px; font-weight: 600; flex: 1;
   text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
