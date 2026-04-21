@@ -140,24 +140,31 @@
   }
   .summary-card-value { font-size: 18px; }
 
-  /* Charts — one per page, full width */
+  /* Charts — multiple per page, avoid splitting a chart across pages */
   .chart-section {
-    padding: 20px 24px 12px;
-    page-break-before: always;
+    padding: 10px 24px 4px;
     page-break-inside: avoid;
+    break-inside: avoid;
   }
-  .chart-section:first-of-type { page-break-before: auto; }
   .chart-wrapper {
-    height: 320px;
+    height: 220px;
     box-shadow: none;
     border: 1px solid #e0e0e0;
-    padding: 16px;
+    padding: 10px;
   }
 
-  /* Player report rows */
-  .metric-row { page-break-inside: avoid; padding: 10px 24px; }
-  .metric-section-header { padding: 8px 24px; }
+  /* Player report — compact for single page */
+  .metric-row { page-break-inside: avoid; padding: 6px 24px; }
+  .metric-row-score { font-size: 18px; }
+  .progress-track { margin: 4px 0; }
+  .metric-row-meta { font-size: 10px; }
+  .metric-section-header { padding: 5px 24px; }
+  .player-report-header { padding: 0 24px 8px; }
   .player-links-section { display: none; }
+  .report-header { padding: 16px 32px; }
+  .report-brand-logo { height: 48px; }
+  .report-club-logo { width: 52px; height: 52px; }
+  .report-footer { padding: 10px 32px; margin-top: 8px; }
 
   /* Footer — full-bleed at bottom */
   .report-footer {
