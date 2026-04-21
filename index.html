@@ -45,7 +45,7 @@
     <header class="app-header no-print">
       <button type="button" class="btn-back" onclick="history.back()">← Back</button>
       <span class="header-title">Team Report</span>
-      <button type="button" class="btn-primary" onclick="printLandscape()">Print / PDF</button>
+      <button type="button" class="btn-primary" onclick="window.print()">Print / PDF</button>
     </header>
     <main id="team-report-content"></main>
   </div>
@@ -68,18 +68,6 @@
     <main id="print-all-content"></main>
   </div>
 
-  <script>
-    function printLandscape() {
-      const style = document.createElement('style');
-      style.id = 'landscape-override';
-      style.textContent = '@page { size: A4 landscape; margin: 10mm; }';
-      document.head.appendChild(style);
-      window.print();
-      window.addEventListener('afterprint', () => {
-        document.getElementById('landscape-override')?.remove();
-      }, { once: true });
-    }
-  </script>
   <script type="module" src="js/app.js"></script>
 </body>
 </html>
