@@ -64,7 +64,7 @@ export async function renderTeamReport(sessionId) {
   container.insertAdjacentHTML('beforeend', `
     <div class="report-header">
       <div style="display:flex;align-items:center;">
-        ${club.logo_url ? `<img class="report-club-logo" src="${club.logo_url}" alt="${club.name} logo">` : ''}
+        ${club.logo_url ? `<img class="report-club-logo" src="${club.logo_url}" alt="${club.name} logo" onerror="this.style.display='none'">` : ''}
         <div class="report-header-text">
           <h1>${club.name}</h1>
           <p>${team.name} · ${session.date}</p>
@@ -97,6 +97,11 @@ export async function renderTeamReport(sessionId) {
   });
   container.appendChild(strip);
 
+  // Charts grid — 2 columns when printed
+  const chartsGrid = document.createElement('div');
+  chartsGrid.className = 'charts-grid';
+  container.appendChild(chartsGrid);
+
   // One chart per metric
   metrics.forEach(metric => {
     const cfg = METRIC_CONFIG[metric];
@@ -127,7 +132,7 @@ export async function renderTeamReport(sessionId) {
       <div class="chart-title">${cfg.label}${cfg.unit ? ` (${cfg.unit})` : ''}</div>
       <div class="chart-wrapper"><canvas id="${canvasId}"></canvas></div>
     `;
-    container.appendChild(section);
+    chartsGrid.appendChild(section);
 
     requestAnimationFrame(() => {
       const ctx = document.getElementById(canvasId).getContext('2d');

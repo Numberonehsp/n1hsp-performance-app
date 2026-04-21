@@ -24,14 +24,17 @@
 .summary-card-value { font-size: 20px; font-weight: 900; color: var(--teal); }
 .summary-card-unit { font-size: 11px; color: var(--text-faint); }
 
+/* Charts grid (screen) */
+.charts-grid { display: block; }
+
 /* Chart section */
 .chart-section { padding: 16px; }
 .chart-title {
   font-size: 16px; font-weight: 800; text-transform: uppercase;
   letter-spacing: 0.5px; color: var(--red); margin-bottom: 12px;
 }
-.chart-wrapper { position: relative; height: 300px; background: white;
-  border-radius: var(--radius); padding: 12px; box-shadow: var(--shadow); }
+.chart-wrapper { position: relative; height: 340px; background: white;
+  border-radius: var(--radius); padding: 12px 12px 40px; box-shadow: var(--shadow); }
 
 /* Player name link in chart */
 .player-name-link { color: var(--teal); cursor: pointer; text-decoration: underline; }
@@ -140,17 +143,36 @@
   }
   .summary-card-value { font-size: 18px; }
 
-  /* Charts — multiple per page, avoid splitting a chart across pages */
+  /* Charts grid — 2 columns, 2 charts per landscape page */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 0 16px;
+  }
+
+  /* Page break after every 2nd chart, content centered on page */
   .chart-section {
-    padding: 10px 24px 4px;
-    page-break-inside: avoid;
     break-inside: avoid;
+    page-break-inside: avoid;
+    padding: 8px 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .chart-section:nth-child(2n) {
+    break-after: page;
+    page-break-after: always;
+  }
+  .chart-section:last-child {
+    break-after: auto !important;
+    page-break-after: auto !important;
   }
   .chart-wrapper {
-    height: 220px;
+    height: 320px;
     box-shadow: none;
     border: 1px solid #e0e0e0;
-    padding: 10px;
+    padding: 10px 10px 50px;
   }
 
   /* Player report — compact for single page */
@@ -166,9 +188,10 @@
   .report-club-logo { width: 52px; height: 52px; }
   .report-footer { padding: 10px 32px; margin-top: 8px; }
 
-  /* Footer — full-bleed at bottom */
+  /* Footer — always starts on a new page */
   .report-footer {
-    margin-top: 16px;
+    break-before: page;
+    page-break-before: always;
     padding: 16px 32px;
     font-size: 11px;
   }

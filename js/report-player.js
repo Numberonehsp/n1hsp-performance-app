@@ -49,7 +49,7 @@ export async function renderPlayerReport(playerId, sessionId, containerEl = null
   container.insertAdjacentHTML('beforeend', `
     <div class="report-header">
       <div style="display:flex;align-items:center;">
-        ${club.logo_url ? `<img class="report-club-logo" src="${club.logo_url}" alt="">` : ''}
+        ${club.logo_url ? `<img class="report-club-logo" src="${club.logo_url}" alt="" onerror="this.style.display='none'">` : ''}
         <div class="report-header-text">
           <h1>${player ? player.name : 'Player'}</h1>
           <p>${club.name} · ${team.name}</p>
