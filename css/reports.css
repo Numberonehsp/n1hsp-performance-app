@@ -104,16 +104,65 @@
 .print-player-section:first-child { break-before: auto; page-break-before: auto; }
 
 /* Print */
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
+
 @media print {
+  /* Force colour rendering */
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+  /* Hide all browser UI */
   .no-print { display: none !important; }
-  body { background: white; }
   .app-header { display: none !important; }
-  .chart-wrapper { height: 260px; box-shadow: none; border: 1px solid #ddd; }
-  .chart-section { page-break-inside: avoid; page-break-after: always; }
-  .chart-section:last-of-type { page-break-after: auto; }
-  .metric-row { page-break-inside: avoid; }
-  .report-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .progress-fill, .progress-avg, .progress-prev { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .summary-card-value { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .report-footer { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { background: white; margin: 0; padding: 0; }
+
+  /* Full-bleed report header */
+  .report-header {
+    padding: 28px 32px;
+    margin: 0;
+  }
+  .report-header-text h1 { font-size: 26px; }
+  .report-brand-logo { height: 64px; }
+  .report-club-logo { width: 72px; height: 72px; }
+
+  /* Summary strip — compact and elegant */
+  .summary-strip {
+    padding: 12px 24px;
+    gap: 8px;
+    background: #f8f8f8;
+  }
+  .summary-card {
+    padding: 10px 8px;
+    box-shadow: none;
+    border: 1px solid #e0e0e0;
+  }
+  .summary-card-value { font-size: 18px; }
+
+  /* Charts — one per page, full width */
+  .chart-section {
+    padding: 20px 24px 12px;
+    page-break-before: always;
+    page-break-inside: avoid;
+  }
+  .chart-section:first-of-type { page-break-before: auto; }
+  .chart-wrapper {
+    height: 320px;
+    box-shadow: none;
+    border: 1px solid #e0e0e0;
+    padding: 16px;
+  }
+
+  /* Player report rows */
+  .metric-row { page-break-inside: avoid; padding: 10px 24px; }
+  .metric-section-header { padding: 8px 24px; }
+  .player-links-section { display: none; }
+
+  /* Footer — full-bleed at bottom */
+  .report-footer {
+    margin-top: 16px;
+    padding: 16px 32px;
+    font-size: 11px;
+  }
 }
