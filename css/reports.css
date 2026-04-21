@@ -28,7 +28,8 @@
 .charts-grid { display: block; }
 
 /* Chart section */
-.chart-section { padding: 16px; }
+.chart-section { padding: 16px; margin-bottom: 24px; }
+.chart-section:last-child { margin-bottom: 0; }
 .chart-title {
   font-size: 16px; font-weight: 800; text-transform: uppercase;
   letter-spacing: 0.5px; color: var(--red); margin-bottom: 12px;

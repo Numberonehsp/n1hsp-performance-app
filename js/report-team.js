@@ -187,7 +187,13 @@ export async function renderTeamReport(sessionId) {
                 },
               },
             },
-            x: { ticks: { font: { size: 11 } } },
+            x: {
+              ticks: {
+                font: { size: 10 },
+                maxRotation: 40,
+                minRotation: 40,
+              }
+            },
           },
         },
         plugins: [{
