@@ -2,6 +2,41 @@ import { getData, findPreviousSession, computeMetricStats,
          sortResultsByMetric, getNumericValue, formatMas } from './data.js';
 import { METRIC_CONFIG, METRICS_ALL, METRICS_SENIOR } from './config.js';
 
+function exportSessionJson(sessionId) {
+  const { clubs, teams, players, sessions, results } = getData();
+  const session = sessions.find(s => s.id === sessionId);
+  const team    = teams.find(t => t.id === session.team_id);
+  const club    = clubs.find(c => c.id === team.club_id);
+
+  const sessionResults = results.filter(r => r.session_id === sessionId);
+  const teamPlayers    = players.filter(p => p.team_id === team.id)
+    .filter(p => sessionResults.some(r => r.player_id === p.id));
+
+  const prevSession    = findPreviousSession(sessions, team.id, sessionId);
+  const prevResults    = prevSession
+    ? results.filter(r => r.session_id === prevSession.id)
+    : [];
+
+  const payload = {
+    exported_at:  new Date().toISOString(),
+    club:         { id: club.id, name: club.name, logo_url: club.logo_url || '' },
+    team:         { id: team.id, name: team.name, type: team.type },
+    session:      { id: session.id, date: session.date },
+    prev_session: prevSession ? { id: prevSession.id, date: prevSession.date } : null,
+    players:      teamPlayers.map(p => ({ id: p.id, name: p.name })),
+    results:      sessionResults,
+    prev_results: prevResults,
+  };
+
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `n1hsp_${team.name.replace(/\s+/g, '-')}_${session.date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function renderTeamReport(sessionId) {
   if (!getData()) {
     document.getElementById('team-report-content').innerHTML = '<p>Loading data…</p>';
@@ -299,11 +334,18 @@ export async function renderTeamReport(sessionId) {
     <button type="button" class="btn-primary no-print" id="btn-print-all" style="margin-top:12px;">
       Print All Players (PDF)
     </button>
+    <button type="button" class="btn-secondary no-print" id="btn-export-json" style="margin-top:8px;">
+      Export Data for PDF Generator
+    </button>
   `;
   container.appendChild(playerLinks);
 
   document.getElementById('btn-print-all').addEventListener('click', () => {
     window.location.hash = `print-all?sessionId=${sessionId}`;
+  });
+
+  document.getElementById('btn-export-json').addEventListener('click', () => {
+    exportSessionJson(sessionId);
   });
 
   // Footer
