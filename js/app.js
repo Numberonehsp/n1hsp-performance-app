@@ -1,5 +1,5 @@
-import { initAuth, requestSignIn, signOut } from './auth.js';
-import { loadAllData } from './data.js';
+import { initAuth, requestSignIn, signOut, getCurrentUserEmail } from './auth.js';
+import { loadAllData, getData } from './data.js';
 import { getRoute } from './router.js';
 import { renderDashboard } from './dashboard.js';
 import { renderEntry } from './entry.js';
@@ -62,6 +62,22 @@ async function onSignedIn() {
 
   await loadAllData();
   loader.remove();
+
+  const admins = getData().admins || [];
+  const email = getCurrentUserEmail();
+  window.appState = { isAdmin: email ? admins.includes(email) : false };
+
+  if (!window.appState.isAdmin) {
+    // Replace the loading screen with a restricted access message
+    document.getElementById('dashboard-content').innerHTML = `
+      <div class="no-access-card">
+        <h2>Access restricted</h2>
+        <p>You don't have admin access to this app.</p>
+        <p>Contact your N1 HSP administrator to request access.</p>
+        <button onclick="document.getElementById('btn-signout').click()" class="btn-secondary">Sign out</button>
+      </div>`;
+    return;
+  }
 
   window.addEventListener('hashchange', route);
   await route();

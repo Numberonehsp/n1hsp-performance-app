@@ -2,6 +2,11 @@ import { GOOGLE_CLIENT_ID, SCOPES } from './config.js';
 
 let tokenClient = null;
 let accessToken = null;
+let currentUserEmail = null;
+
+export function getCurrentUserEmail() {
+  return currentUserEmail;
+}
 
 // Call once on app load.
 // onReady: called when gapi + GIS are loaded and sign-in button is ready.
@@ -14,12 +19,23 @@ export function initAuth(onReady, onSignedIn) {
     tokenClient = google.accounts.oauth2.initTokenClient({
       client_id: GOOGLE_CLIENT_ID,
       scope: SCOPES,
-      callback: (response) => {
+      callback: async (response) => {
         if (response.error) {
           console.error('Auth error:', response.error);
           return;
         }
         accessToken = response.access_token;
+
+        // Fetch user email from userinfo endpoint
+        try {
+          const r = await fetch(`https://www.googleapis.com/oauth2/v3/userinfo?access_token=${accessToken}`);
+          const info = await r.json();
+          currentUserEmail = (info.email || '').toLowerCase().trim();
+        } catch (e) {
+          console.warn('Could not fetch user email:', e);
+          currentUserEmail = null;
+        }
+
         onSignedIn();
       },
     });
@@ -37,6 +53,7 @@ export function signOut() {
     google.accounts.oauth2.revoke(accessToken, () => {});
     accessToken = null;
   }
+  currentUserEmail = null;
   window.location.hash = '';
   window.location.reload();
 }

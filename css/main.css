@@ -117,3 +117,16 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 .past-session-row { display: flex; justify-content: space-between;
   padding: 4px 0; border-bottom: 1px solid var(--border); }
 .past-session-row a { color: var(--teal); text-decoration: none; }
+
+.no-access-card {
+  max-width: 400px;
+  margin: 80px auto;
+  background: #fff;
+  border-radius: 12px;
+  padding: 40px 48px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+.no-access-card h2 { color: #1a6b5c; margin-bottom: 12px; }
+.no-access-card p  { color: #555; margin-bottom: 8px; }
+.no-access-card button { margin-top: 20px; }

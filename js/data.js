@@ -1,17 +1,21 @@
 import { readSheet, appendRow } from './sheets.js';
-import { METRICS_ALL, METRICS_SENIOR, METRIC_CONFIG } from './config.js';
+import { METRICS_ALL, METRICS_SENIOR, METRIC_CONFIG, ADMINS_TAB } from './config.js';
 
 let cache = null;
 
 export async function loadAllData() {
-  const [clubs, teams, players, sessions, results] = await Promise.all([
+  const [clubs, teams, players, sessions, results, admins] = await Promise.all([
     readSheet('clubs'),
     readSheet('teams'),
     readSheet('players'),
     readSheet('sessions'),
     readSheet('results'),
+    readSheet(ADMINS_TAB),
   ]);
-  cache = { clubs, teams, players, sessions, results };
+  cache = {
+    clubs, teams, players, sessions, results,
+    admins: (admins || []).map(row => (row.email || '').toLowerCase().trim()).filter(Boolean),
+  };
   return cache;
 }
 
