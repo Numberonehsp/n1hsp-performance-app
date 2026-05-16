@@ -2,6 +2,8 @@
 export const GOOGLE_CLIENT_ID = '916433882107-hat21936crrnkhgdrmabv1kmlf0a7cbv.apps.googleusercontent.com';
 export const SHEET_ID = '1j_E4xAEBmx8TpumZYTI76PLhQ9E_htud-yCbMqUw9kM';
 export const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
+export const ADMINS_TAB = 'admins';
+export const PUBLIC_API_KEY = 'YOUR_API_KEY_HERE'; // placeholder — real key added by user
 
 // Metrics present for all team types
 export const METRICS_ALL = ['height', 'weight', 'cmj', 'sprint_20m', 'mas'];
