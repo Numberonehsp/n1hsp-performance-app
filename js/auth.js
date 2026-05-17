@@ -25,6 +25,7 @@ export function initAuth(onReady, onSignedIn) {
           return;
         }
         accessToken = response.access_token;
+        gapi.client.setToken({ access_token: accessToken });
 
         // Fetch user email from userinfo endpoint
         try {
