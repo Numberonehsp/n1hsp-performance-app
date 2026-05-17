@@ -2,6 +2,7 @@ import { getData, findPreviousSession, computeMetricStats,
          sortResultsByMetric, getNumericValue, formatMas } from './data.js';
 import { METRIC_CONFIG, METRICS_ALL, METRICS_SENIOR } from './config.js';
 import { openAddPlayerModal } from './add-player.js';
+import { printTeamReport } from './print-team.js';
 
 // Re-render the team report when a player is added (module-level, registered once)
 let _currentSessionId = null;
@@ -366,6 +367,12 @@ export async function renderTeamReport(sessionId) {
   document.getElementById('btn-export-json').addEventListener('click', () => {
     exportSessionJson(sessionId);
   });
+
+  // Wire branded PDF print button in the page header
+  const printBtn = document.getElementById('btn-print-team');
+  if (printBtn) {
+    printBtn.onclick = () => printTeamReport(team.id, sessionId, prevSession?.id ?? null);
+  }
 
   // Footer
   container.insertAdjacentHTML('beforeend', `
