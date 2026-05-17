@@ -18,6 +18,23 @@
 .viewer-team-name { font-size: 18px; font-weight: 900; letter-spacing: -0.3px; }
 .viewer-club-name { font-size: 13px; opacity: 0.8; margin-top: 2px; }
 
+/* Control bar replaces the old session-bar, now holds multiple control groups */
+.viewer-control-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 20px;
+  background: #f5f9f8;
+  border-bottom: 1px solid #e0ede9;
+  flex-wrap: wrap;
+}
+.viewer-control-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Keep the old class for the scorecard back-bar which still uses it */
 .viewer-session-bar {
   display: flex;
   align-items: center;
@@ -54,6 +71,15 @@
   transition: background 0.15s;
 }
 .viewer-player-row:hover { background: #f9fdfc; }
+
+.viewer-rank {
+  width: 22px;
+  font-size: 12px;
+  font-weight: 900;
+  color: #1a6b5c;
+  text-align: center;
+  flex-shrink: 0;
+}
 
 .viewer-avatar {
   width: 36px;
@@ -111,7 +137,7 @@
   display: flex;
   align-items: baseline;
   gap: 8px;
-  margin-bottom: 6px;
+  margin-bottom: 2px;
 }
 .viewer-metric-label { font-size: 13px; color: #666; flex: 1; }
 .viewer-metric-value { font-size: 22px; font-weight: 900; color: #1a6b5c; }
@@ -119,6 +145,12 @@
 .viewer-delta { font-size: 13px; font-weight: 600; }
 .delta-up { color: #2e7d32; }
 .delta-dn { color: #c62828; }
+
+.viewer-metric-delta {
+  font-size: 12px;
+  color: #888;
+  margin: 2px 0 4px;
+}
 
 .viewer-prog-bar {
   height: 5px;
@@ -132,3 +164,23 @@
   border-radius: 3px;
   transition: width 0.3s ease;
 }
+
+.viewer-team-stats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #999;
+  margin-top: 4px;
+}
+
+.viewer-section-header {
+  font-size: 11px;
+  font-weight: 700;
+  color: #1a6b5c;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 12px 16px 4px;
+  border-top: 1px solid #e0ede9;
+  margin-top: 4px;
+}
+.viewer-section-header:first-child { border-top: none; margin-top: 0; }

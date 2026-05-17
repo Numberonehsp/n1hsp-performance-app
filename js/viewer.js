@@ -64,52 +64,129 @@ function renderViewerHeader(club, team) {
     </div>`;
 }
 
+// ── Metric value helpers ─────────────────────────────────────────────────────
+
+/**
+ * Returns a numeric value for sorting purposes, or null if no data.
+ * For MAS, converts min:sec to total seconds (lower = better, higherIsBetter: false).
+ */
+function getNumericForSort(result, key) {
+  if (!result) return null;
+  if (key === 'mas') {
+    const min = parseInt(result.mas_min) || 0;
+    const sec = parseInt(result.mas_sec) || 0;
+    return (min || sec) ? min * 60 + sec : null;
+  }
+  const v = parseFloat(result[key]);
+  return isNaN(v) ? null : v;
+}
+
+/**
+ * Returns a formatted display string for a metric value.
+ * 1 decimal: CMJ, height, weight, body fat metrics
+ * 2 decimals: sprint_20m
+ * MAS: min:sec
+ */
+function formatMetricDisplay(result, key, cfg) {
+  if (!result) return '—';
+  if (key === 'mas') {
+    const min = parseInt(result.mas_min) || 0;
+    const sec = parseInt(result.mas_sec) || 0;
+    return (min || sec) ? `${min}:${String(sec).padStart(2, '0')}` : '—';
+  }
+  const v = parseFloat(result[key]);
+  if (isNaN(v)) return '—';
+  const decimals = (key === 'sprint_20m') ? 2 : 1;
+  return `${v.toFixed(decimals)}${cfg.unit ? ' ' + cfg.unit : ''}`;
+}
+
 // ── Team list view ───────────────────────────────────────────────────────────
 
-function renderTeamView(app, club, team, sessions, selectedSessionId) {
+function renderTeamView(app, club, team, sessions, selectedSessionId, selectedMetricKey) {
   const sessionId = selectedSessionId || (sessions[0] && sessions[0].id) || null;
+  const metricKey = selectedMetricKey || 'cmj';
+
+  const isSenior = (team.type || '').toLowerCase() === 'senior';
+  const availableMetrics = isSenior ? [...METRICS_ALL, ...METRICS_SENIOR] : [...METRICS_ALL];
+
   const teamPlayers = viewerCache.players.filter(p => p.team_id === team.id);
   const sessionResults = sessionId
     ? viewerCache.results.filter(r => r.session_id === sessionId)
     : [];
 
+  const cfg = METRIC_CONFIG[metricKey];
+
+  // Build session options
   const sessionOptions = sessions
     .map(s => `<option value="${s.id}"${s.id === sessionId ? ' selected' : ''}>${s.date}</option>`)
     .join('');
 
-  const playerRows = teamPlayers.map(player => {
-    const result = sessionResults.find(r => r.player_id === player.id);
-    const cmjDisplay = result && parseFloat(result.cmj) > 0
-      ? parseFloat(result.cmj).toFixed(1) + ' cm'
-      : '—';
+  // Build metric options
+  const metricOptions = availableMetrics
+    .map(k => `<option value="${k}"${k === metricKey ? ' selected' : ''}>${METRIC_CONFIG[k].label}</option>`)
+    .join('');
+
+  // Compute numeric sort value for each player and sort
+  const playersWithValues = teamPlayers.map(player => {
+    const result = sessionResults.find(r => r.player_id === player.id) || null;
+    const sortVal = getNumericForSort(result, metricKey);
+    const displayStr = formatMetricDisplay(result, metricKey, cfg);
     const parts = player.name.trim().split(/\s+/);
     const initials = parts.length >= 2
       ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
       : (player.name.slice(0, 2)).toUpperCase();
+    return { player, result, sortVal, displayStr, initials };
+  });
 
+  // Sort: players with data come first, ranked by metric value (best first)
+  // higherIsBetter: true → descending; false (MAS, sprint) → ascending (lower = better)
+  playersWithValues.sort((a, b) => {
+    if (a.sortVal === null && b.sortVal === null) return 0;
+    if (a.sortVal === null) return 1;
+    if (b.sortVal === null) return -1;
+    return cfg.higherIsBetter
+      ? b.sortVal - a.sortVal
+      : a.sortVal - b.sortVal;
+  });
+
+  const playerRows = playersWithValues.map(({ player, displayStr, initials, sortVal }, idx) => {
+    const rank = sortVal !== null ? idx + 1 : '—';
     return `
       <div class="viewer-player-row" data-player-id="${player.id}">
+        <div class="viewer-rank">${rank}</div>
         <div class="viewer-avatar">${initials}</div>
         <div class="viewer-player-name">${player.name}</div>
-        <div class="viewer-player-score">${cmjDisplay}</div>
+        <div class="viewer-player-score">${displayStr}</div>
         <div class="viewer-chevron">›</div>
       </div>`;
   }).join('');
 
   app.innerHTML = `
     ${renderViewerHeader(club, team)}
-    <div class="viewer-session-bar">
-      <span class="viewer-session-label">Session</span>
-      <select id="viewer-session-select" class="viewer-session-select">
-        ${sessionOptions}
-      </select>
+    <div class="viewer-control-bar">
+      <div class="viewer-control-group">
+        <span class="viewer-session-label">Session</span>
+        <select id="viewer-session-select" class="viewer-session-select">
+          ${sessionOptions}
+        </select>
+      </div>
+      <div class="viewer-control-group">
+        <span class="viewer-session-label">Metric</span>
+        <select id="viewer-metric-select" class="viewer-session-select">
+          ${metricOptions}
+        </select>
+      </div>
     </div>
     <div class="viewer-player-list">
       ${playerRows || '<div style="padding:20px;color:#888;">No players found.</div>'}
     </div>`;
 
   document.getElementById('viewer-session-select').addEventListener('change', e => {
-    renderTeamView(app, club, team, sessions, e.target.value);
+    renderTeamView(app, club, team, sessions, e.target.value, metricKey);
+  });
+
+  document.getElementById('viewer-metric-select').addEventListener('change', e => {
+    renderTeamView(app, club, team, sessions, sessionId, e.target.value);
   });
 
   app.querySelectorAll('.viewer-player-row').forEach(row => {
@@ -160,14 +237,52 @@ function getDelta(metricKey, currValue, prevResult, metricConfig) {
   const sign = diff >= 0 ? '+' : '';
   const unit = metricConfig.unit ? ' ' + metricConfig.unit : '';
   const cls = isImprovement ? 'delta-up' : 'delta-dn';
-  return `<span class="viewer-delta ${cls}">${sign}${diff.toFixed(2)}${unit}</span>`;
+  const decimals = metricKey === 'sprint_20m' ? 2 : 1;
+  return { prevValue, diff, sign, unit, cls, decimals };
+}
+
+// ── Team stats helper ─────────────────────────────────────────────────────────
+
+function getTeamStats(sessionResults, key) {
+  if (key === 'mas') {
+    const secs = sessionResults
+      .map(r => getNumericForSort(r, 'mas'))
+      .filter(v => v !== null);
+    if (!secs.length) return null;
+    const minV = Math.min(...secs);
+    const maxV = Math.max(...secs);
+    const avgV = secs.reduce((a, b) => a + b, 0) / secs.length;
+    const fmtSec = s => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
+    // For MAS lower = better, so "best" is the lowest time
+    return {
+      min: fmtSec(minV),
+      avg: fmtSec(Math.round(avgV)),
+      best: fmtSec(minV),
+      worst: fmtSec(maxV),
+    };
+  }
+  const cfg = METRIC_CONFIG[key];
+  const vals = sessionResults.map(r => parseFloat(r[key])).filter(v => !isNaN(v));
+  if (!vals.length) return null;
+  const minV = Math.min(...vals);
+  const maxV = Math.max(...vals);
+  const avgV = vals.reduce((a, b) => a + b, 0) / vals.length;
+  const decimals = key === 'sprint_20m' ? 2 : 1;
+  const fmt = v => v.toFixed(decimals) + (cfg.unit ? ' ' + cfg.unit : '');
+  return {
+    min: fmt(minV),
+    avg: fmt(avgV),
+    best: fmt(cfg.higherIsBetter ? maxV : minV),
+    worst: fmt(cfg.higherIsBetter ? minV : maxV),
+  };
 }
 
 // ── Metric cards ─────────────────────────────────────────────────────────────
 
 function buildMetricCards(team, sessionId, playerId, sessions) {
   const isSenior = (team.type || '').toLowerCase() === 'senior';
-  const metricKeys = isSenior ? [...METRICS_ALL, ...METRICS_SENIOR] : [...METRICS_ALL];
+  const perfKeys = [...METRICS_ALL];
+  const bodyKeys = isSenior ? [...METRICS_SENIOR] : [];
 
   const sessionResults = viewerCache.results.filter(r => r.session_id === sessionId);
   const currResult = sessionResults.find(r => r.player_id === playerId) || null;
@@ -180,17 +295,36 @@ function buildMetricCards(team, sessionId, playerId, sessions) {
     : [];
   const prevResult = prevResults.find(r => r.player_id === playerId) || null;
 
-  return metricKeys.map(key => {
+  function buildOneCard(key) {
     const cfg = METRIC_CONFIG[key];
     const displayVal = getDisplayValue(currResult, key);
-    const valStr = displayVal !== null
-      ? (typeof displayVal === 'number' ? displayVal.toFixed(2) + (cfg.unit ? ' ' + cfg.unit : '') : displayVal)
-      : '—';
+    const valStr = formatMetricDisplay(currResult, key, cfg);
+
     const pct = (currResult && displayVal !== null && typeof displayVal === 'number')
       ? getProgressPct(key, displayVal, sessionResults, cfg)
       : 50;
-    const deltaHtml = (currResult && typeof displayVal === 'number')
-      ? (getDelta(key, displayVal, prevResult, cfg) || '')
+
+    // Delta row with previous raw value
+    let deltaHtml = '';
+    if (currResult && typeof displayVal === 'number') {
+      const delta = getDelta(key, displayVal, prevResult, cfg);
+      if (delta) {
+        const { prevValue, diff, sign, unit, cls, decimals } = delta;
+        const prevStr = prevValue.toFixed(decimals) + unit;
+        const diffStr = `${sign}${diff.toFixed(decimals)}${unit}`;
+        deltaHtml = `<div class="viewer-metric-delta">Previous: ${prevStr} <span class="${cls}">` +
+          (diff >= 0 ? '↑' : '↓') + ` ${diffStr}</span></div>`;
+      }
+    }
+
+    // Team stats
+    const stats = getTeamStats(sessionResults, key);
+    const teamStatsHtml = stats
+      ? `<div class="viewer-team-stats">
+          <span>Team min: ${stats.min}</span>
+          <span>Team avg: ${stats.avg}</span>
+          <span>Team best: ${stats.best}</span>
+        </div>`
       : '';
 
     return `
@@ -198,13 +332,23 @@ function buildMetricCards(team, sessionId, playerId, sessions) {
         <div class="viewer-metric-top">
           <span class="viewer-metric-label">${cfg.label}</span>
           <span class="viewer-metric-value">${valStr}</span>
-          ${deltaHtml}
         </div>
+        ${deltaHtml}
         <div class="viewer-prog-bar">
           <div class="viewer-prog-fill" style="width:${Math.round(Math.min(100, Math.max(0, pct)))}%"></div>
         </div>
+        ${teamStatsHtml}
       </div>`;
-  }).join('');
+  }
+
+  let html = '';
+  if (isSenior) html += '<div class="viewer-section-header">Performance</div>';
+  html += perfKeys.map(key => buildOneCard(key)).join('');
+  if (bodyKeys.length) {
+    html += '<div class="viewer-section-header">Body Composition</div>';
+    html += bodyKeys.map(key => buildOneCard(key)).join('');
+  }
+  return html;
 }
 
 // ── Player scorecard view ─────────────────────────────────────────────────────
@@ -290,5 +434,5 @@ export async function initViewer(teamId) {
     return;
   }
 
-  renderTeamView(app, club, team, sessions, sessions[0].id);
+  renderTeamView(app, club, team, sessions, sessions[0].id, 'cmj');
 }
