@@ -1,6 +1,13 @@
 import { getData, findPreviousSession, computeMetricStats,
          sortResultsByMetric, getNumericValue, formatMas } from './data.js';
 import { METRIC_CONFIG, METRICS_ALL, METRICS_SENIOR } from './config.js';
+import { openAddPlayerModal } from './add-player.js';
+
+// Re-render the team report when a player is added (module-level, registered once)
+let _currentSessionId = null;
+document.addEventListener('playerAdded', e => {
+  if (_currentSessionId) renderTeamReport(_currentSessionId);
+});
 
 function exportSessionJson(sessionId) {
   const { clubs, teams, players, sessions, results } = getData();
@@ -38,6 +45,8 @@ function exportSessionJson(sessionId) {
 }
 
 export async function renderTeamReport(sessionId) {
+  _currentSessionId = sessionId;
+
   if (!getData()) {
     document.getElementById('team-report-content').innerHTML = '<p>Loading data…</p>';
     return;
@@ -339,6 +348,16 @@ export async function renderTeamReport(sessionId) {
     </button>
   `;
   container.appendChild(playerLinks);
+
+  if (window.appState?.isAdmin) {
+    const addLink = document.createElement('button');
+    addLink.type = 'button';
+    addLink.className = 'btn-link';
+    addLink.textContent = '+ Add Player';
+    addLink.style.cssText = 'padding:8px 16px;display:block;';
+    addLink.addEventListener('click', () => openAddPlayerModal(team.id));
+    playerLinks.querySelector('.player-links-grid').insertAdjacentElement('afterend', addLink);
+  }
 
   document.getElementById('btn-print-all').addEventListener('click', () => {
     window.location.hash = `print-all?sessionId=${sessionId}`;

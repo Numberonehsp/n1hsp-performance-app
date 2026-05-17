@@ -1,5 +1,8 @@
 import { getData } from './data.js';
 import { navigate } from './router.js';
+import { openAddPlayerModal } from './add-player.js';
+
+document.addEventListener('playerAdded', () => renderDashboard());
 
 export async function renderDashboard() {
   const { clubs, teams, sessions } = getData();
@@ -56,6 +59,16 @@ export async function renderDashboard() {
           : `<div class="team-last-session text-muted">No sessions yet</div>`
         }
       `;
+      if (window.appState?.isAdmin) {
+        const addBtn = document.createElement('button');
+        addBtn.type = 'button';
+        addBtn.className = 'btn-link';
+        addBtn.textContent = '+ Add Player';
+        addBtn.style.cssText = 'margin-top:8px;display:block;padding:4px 0;';
+        addBtn.addEventListener('click', () => openAddPlayerModal(team.id));
+        teamEl.querySelector('.team-actions').appendChild(addBtn);
+      }
+
       clubEl.appendChild(teamEl);
     });
 
