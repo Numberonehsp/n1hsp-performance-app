@@ -130,3 +130,99 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 .no-access-card h2 { color: #1a6b5c; margin-bottom: 12px; }
 .no-access-card p  { color: #555; margin-bottom: 8px; }
 .no-access-card button { margin-top: 20px; }
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 28px 32px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+}
+.modal-title { color: #1a6b5c; margin: 0 0 20px; font-size: 18px; font-weight: 700; }
+.modal-field { margin-bottom: 14px; }
+.modal-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a6b5c;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 5px;
+}
+.modal-select,
+.modal-input {
+  width: 100%;
+  border: 1px solid #c5ddd7;
+  border-radius: 7px;
+  padding: 9px 12px;
+  font-size: 15px;
+  color: #333;
+  box-sizing: border-box;
+}
+.modal-select:focus,
+.modal-input:focus {
+  outline: none;
+  border-color: #1a6b5c;
+  box-shadow: 0 0 0 3px rgba(26,107,92,0.12);
+}
+.modal-warning {
+  font-size: 13px;
+  color: #b45309;
+  padding: 8px 10px;
+  background: #fef3c7;
+  border-radius: 5px;
+  margin: 0 0 10px;
+}
+.modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 20px;
+}
+.btn-link {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0;
+}
+.btn-link:hover { color: #333; text-decoration: underline; }
+
+/* Toast */
+.save-toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  z-index: 2000;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  white-space: nowrap;
+}
+
+/* Info banner */
+.info-banner {
+  background: #f5f9f8;
+  border-left: 3px solid #1a6b5c;
+  color: #555;
+  font-size: 13px;
+  padding: 8px 14px;
+  margin: 8px 16px;
+  border-radius: 0 4px 4px 0;
+}

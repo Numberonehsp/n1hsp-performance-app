@@ -70,5 +70,24 @@
   </div>
 
   <script type="module" src="js/app.js"></script>
+
+  <div id="add-player-modal" class="modal-overlay" style="display:none">
+    <div class="modal-card">
+      <h3 class="modal-title">Add Player</h3>
+      <div class="modal-field">
+        <label class="modal-label" for="add-player-team">Team</label>
+        <select id="add-player-team" class="modal-select"></select>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label" for="add-player-name">Player name</label>
+        <input id="add-player-name" type="text" class="modal-input" placeholder="Full name" autocomplete="off">
+      </div>
+      <p id="add-player-warning" class="modal-warning" style="display:none"></p>
+      <div class="modal-actions">
+        <button id="add-player-save" class="btn-primary">Save</button>
+        <button id="add-player-cancel" class="btn-link">Cancel</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
