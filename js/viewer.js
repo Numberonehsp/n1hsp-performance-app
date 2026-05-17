@@ -149,14 +149,58 @@ function renderTeamView(app, club, team, sessions, selectedSessionId, selectedMe
       : a.sortVal - b.sortVal;
   });
 
-  const playerRows = playersWithValues.map(({ player, displayStr, initials, sortVal }, idx) => {
+  // Team bar stats
+  const teamSortVals = playersWithValues.map(p => p.sortVal).filter(v => v !== null);
+  const hasTeamRange = teamSortVals.length >= 2;
+  const teamMin = hasTeamRange ? Math.min(...teamSortVals) : 0;
+  const teamMax = hasTeamRange ? Math.max(...teamSortVals) : 1;
+  const teamAvgNum = hasTeamRange
+    ? teamSortVals.reduce((a, b) => a + b, 0) / teamSortVals.length
+    : 0;
+  const range = teamMax - teamMin || 1;
+  const avgPct = cfg.higherIsBetter
+    ? ((teamAvgNum - teamMin) / range) * 100
+    : ((teamMax - teamAvgNum) / range) * 100;
+
+  // Previous session results
+  const currIdx = sessions.findIndex(s => s.id === sessionId);
+  const prevSession = currIdx >= 0 && currIdx + 1 < sessions.length ? sessions[currIdx + 1] : null;
+  const prevResults = prevSession
+    ? viewerCache.results.filter(r => r.session_id === prevSession.id)
+    : [];
+
+  const playerRows = playersWithValues.map(({ player, result, displayStr, initials, sortVal }, idx) => {
     const rank = sortVal !== null ? idx + 1 : '—';
+
+    const fillPct = (hasTeamRange && sortVal !== null)
+      ? Math.min(100, Math.max(0, cfg.higherIsBetter
+          ? ((sortVal - teamMin) / range) * 100
+          : ((teamMax - sortVal) / range) * 100))
+      : null;
+
+    const prevResult = prevResults.find(r => r.player_id === player.id) || null;
+    const prevDisplay = formatMetricDisplay(prevResult, metricKey, cfg);
+    const showPrev = prevResult && prevDisplay !== '—';
+
+    const barHtml = fillPct !== null ? `
+      <div class="viewer-row-bar-wrap">
+        <div class="viewer-row-bar-fill" style="width:${fillPct.toFixed(1)}%"></div>
+        <div class="viewer-row-avg-line" style="left:${avgPct.toFixed(1)}%"></div>
+      </div>` : '';
+
+    const prevHtml = showPrev ? `<div class="viewer-row-prev">Prev: ${prevDisplay}</div>` : '';
+
     return `
       <div class="viewer-player-row" data-player-id="${player.id}">
         <div class="viewer-rank">${rank}</div>
         <div class="viewer-avatar">${initials}</div>
-        <div class="viewer-player-name">${player.name}</div>
-        <div class="viewer-player-score">${displayStr}</div>
+        <div class="viewer-player-info">
+          <div class="viewer-player-name-score">
+            <span class="viewer-player-name">${player.name}</span>
+            <span class="viewer-player-score">${displayStr}</span>
+          </div>
+          ${barHtml}${prevHtml}
+        </div>
         <div class="viewer-chevron">›</div>
       </div>`;
   }).join('');

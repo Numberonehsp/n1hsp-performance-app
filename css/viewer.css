@@ -94,9 +94,17 @@
   font-weight: 700;
   flex-shrink: 0;
 }
-.viewer-player-name { font-size: 15px; font-weight: 600; flex: 1; color: #222; }
-.viewer-player-score { font-size: 14px; color: #1a6b5c; font-weight: 700; }
-.viewer-chevron { font-size: 20px; color: #ccc; line-height: 1; }
+.viewer-player-info { flex: 1; min-width: 0; }
+.viewer-player-name-score { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
+.viewer-player-name { font-size: 15px; font-weight: 600; color: #222; }
+.viewer-player-score { font-size: 14px; color: #1a6b5c; font-weight: 700; flex-shrink: 0; margin-left: 8px; }
+
+.viewer-row-bar-wrap { position: relative; height: 5px; background: #e0ede9; border-radius: 3px; margin-bottom: 4px; }
+.viewer-row-bar-fill { position: absolute; left: 0; top: 0; height: 100%; background: #1a6b5c; border-radius: 3px; }
+.viewer-row-avg-line { position: absolute; top: -3px; width: 2px; height: 11px; background: #8b0000; border-radius: 1px; transform: translateX(-50%); }
+.viewer-row-prev { font-size: 11px; color: #999; }
+
+.viewer-chevron { font-size: 20px; color: #ccc; line-height: 1; flex-shrink: 0; }
 
 .viewer-back-bar {
   display: flex;
