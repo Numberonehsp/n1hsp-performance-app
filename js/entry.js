@@ -3,6 +3,16 @@ import { getData, getPlayerResult, getDisplayValue,
 import { METRIC_CONFIG } from './config.js';
 import { navigate } from './router.js';
 
+const SAVE_QUEUE_KEY = 'n1hsp_save_queue';
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'save-toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+
 let currentTeam = null;
 let currentPlayers = [];
 let currentPlayerIndex = 0;
@@ -197,8 +207,11 @@ async function handleSave(teamId, date) {
     navigate('team-report', { sessionId });
   } catch (err) {
     console.error(err);
+    const queue = JSON.parse(localStorage.getItem(SAVE_QUEUE_KEY) || '[]');
+    queue.push({ teamId, date, resultsMap, timestamp: Date.now() });
+    localStorage.setItem(SAVE_QUEUE_KEY, JSON.stringify(queue));
     btn.disabled = false;
     btn.textContent = 'Save';
-    alert('Error saving session. Check your internet connection and try again.');
+    showToast('Save failed — will retry when online.');
   }
 }

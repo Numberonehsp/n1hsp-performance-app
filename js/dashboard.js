@@ -14,6 +14,11 @@ export async function renderDashboard() {
     return;
   }
 
+  const banner = document.createElement('div');
+  banner.className = 'info-banner';
+  banner.textContent = 'Reload the page to see sessions added by other users.';
+  container.appendChild(banner);
+
   clubs.forEach(club => {
     const clubTeams = teams.filter(t => t.club_id === club.id);
 

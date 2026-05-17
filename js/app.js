@@ -1,5 +1,5 @@
 import { initAuth, requestSignIn, signOut, getCurrentUserEmail } from './auth.js';
-import { loadAllData, getData } from './data.js';
+import { loadAllData, getData, saveSession } from './data.js';
 import { getRoute, isViewerRoute, getViewerTeamId } from './router.js';
 import { initViewer } from './viewer.js';
 import { renderDashboard } from './dashboard.js';
@@ -7,6 +7,34 @@ import { renderEntry } from './entry.js';
 import { renderTeamReport } from './report-team.js';
 import { renderPlayerReport } from './report-player.js';
 import { renderPrintAll } from './print-all.js';
+
+const SAVE_QUEUE_KEY = 'n1hsp_save_queue';
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'save-toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+
+async function retryQueuedSaves() {
+  const queue = JSON.parse(localStorage.getItem(SAVE_QUEUE_KEY) || '[]');
+  if (!queue.length) return;
+  const remaining = [];
+  for (const item of queue) {
+    try {
+      await saveSession(item.teamId, item.date, item.resultsMap);
+    } catch {
+      remaining.push(item);
+    }
+  }
+  localStorage.setItem(SAVE_QUEUE_KEY, JSON.stringify(remaining));
+  if (remaining.length < queue.length) {
+    await loadAllData();
+    showToast(`${queue.length - remaining.length} queued save(s) uploaded.`);
+  }
+}
 
 const VIEW_IDS = {
   dashboard: 'view-dashboard',
@@ -62,6 +90,7 @@ async function onSignedIn() {
   document.getElementById('dashboard-content').appendChild(loader);
 
   await loadAllData();
+  await retryQueuedSaves();
   loader.remove();
 
   const admins = getData().admins || [];

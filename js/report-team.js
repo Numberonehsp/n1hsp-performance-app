@@ -234,7 +234,7 @@ export async function renderTeamReport(sessionId) {
             },
             x: {
               ticks: {
-                font: { size: 10 },
+                font: { size: 9 },
                 maxRotation: 40,
                 minRotation: 40,
               }
