@@ -1,6 +1,7 @@
 import { initAuth, requestSignIn, signOut, getCurrentUserEmail } from './auth.js';
 import { loadAllData, getData } from './data.js';
-import { getRoute } from './router.js';
+import { getRoute, isViewerRoute, getViewerTeamId } from './router.js';
+import { initViewer } from './viewer.js';
 import { renderDashboard } from './dashboard.js';
 import { renderEntry } from './entry.js';
 import { renderTeamReport } from './report-team.js';
@@ -84,6 +85,17 @@ async function onSignedIn() {
 }
 
 window.addEventListener('load', () => {
+  // Viewer mode — bypass auth entirely
+  if (isViewerRoute()) {
+    initViewer(getViewerTeamId());
+    return;
+  }
+
+  // Also handle hash changes that navigate to a viewer route after load
+  window.addEventListener('hashchange', () => {
+    if (isViewerRoute()) initViewer(getViewerTeamId());
+  });
+
   initAuth(
     () => {
       document.getElementById('view-signin').classList.remove('hidden');
