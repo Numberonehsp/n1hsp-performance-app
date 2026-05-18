@@ -57,3 +57,11 @@
   border: none; border-radius: var(--radius); font-size: 15px; font-weight: 700; cursor: pointer;
 }
 .btn-next-player:hover { background: var(--teal-dark); }
+
+.entry-add-player-row { margin-top: 12px; text-align: center; }
+.btn-add-player-inline {
+  background: none; border: none; color: var(--teal); font-size: 13px;
+  font-weight: 600; cursor: pointer; padding: 4px 8px; border-radius: 4px;
+  text-decoration: underline; text-underline-offset: 2px;
+}
+.btn-add-player-inline:hover { color: var(--teal-dark); }

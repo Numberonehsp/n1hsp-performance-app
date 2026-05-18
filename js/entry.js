@@ -2,6 +2,7 @@ import { getData, getPlayerResult, getDisplayValue,
          getMetricsForTeamType, saveSession, loadAllData } from './data.js';
 import { METRIC_CONFIG } from './config.js';
 import { navigate } from './router.js';
+import { openAddPlayerModal } from './add-player.js';
 
 const SAVE_QUEUE_KEY = 'n1hsp_save_queue';
 
@@ -50,6 +51,20 @@ export async function renderEntry(teamId, date) {
   renderPlayerStrip();
   selectPlayer(0);
   updateSaveButton();
+
+  // When a player is added via the modal, refresh the list and jump to the new player
+  document.addEventListener('playerAdded', function onPlayerAdded(e) {
+    if (e.detail?.teamId !== teamId) return;
+    document.removeEventListener('playerAdded', onPlayerAdded);
+    const updated = getData().players.filter(p => p.team_id === teamId);
+    const newPlayer = updated.find(p => !currentPlayers.some(cp => cp.id === p.id));
+    currentPlayers = updated;
+    renderPlayerStrip();
+    const newIdx = newPlayer ? currentPlayers.findIndex(p => p.id === newPlayer.id) : currentPlayers.length - 1;
+    selectPlayer(newIdx >= 0 ? newIdx : currentPlayers.length - 1);
+    // Re-attach listener for subsequent adds in the same session
+    document.addEventListener('playerAdded', onPlayerAdded);
+  });
 }
 
 function renderPlayerStrip() {
@@ -116,11 +131,15 @@ function renderForm(player) {
         ${currentPlayerIndex < currentPlayers.length - 1 ? 'Save & Next →' : 'Save & Done ✓'}
       </button>
     </div>
+    <div class="entry-add-player-row">
+      <button type="button" class="btn-add-player-inline" id="btn-add-player-inline">+ Add New Player</button>
+    </div>
   `;
   form.appendChild(div);
 
   document.getElementById('btn-skip-player').onclick = () => skipPlayer(player);
   document.getElementById('btn-next-player').onclick = () => savePlayerAndAdvance(player, metrics);
+  document.getElementById('btn-add-player-inline').onclick = () => openAddPlayerModal(currentTeam.id);
 }
 
 function renderMetricField(metric, saved, prev) {
