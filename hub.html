@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>N1 HSP — Team Hub</title>
+  <link rel="icon" type="image/png" href="assests/favicon.png">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --teal:      #1a6b5c;
+      --teal-dark: #0d4a3f;
+      --bg:        #f4f7f6;
+      --card-bg:   #ffffff;
+      --border:    #e0ede9;
+      --text:      #222;
+      --muted:     #888;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .hub-header {
+      background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+      color: #fff;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .hub-logo {
+      width: 48px; height: 48px;
+      object-fit: contain;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.15);
+      padding: 4px;
+      flex-shrink: 0;
+    }
+    .hub-header-text h1 { font-size: 20px; font-weight: 900; letter-spacing: -0.3px; }
+    .hub-header-text p  { font-size: 13px; opacity: 0.8; margin-top: 2px; }
+
+    /* ── Main ── */
+    .hub-main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 28px 20px 48px;
+    }
+
+    .hub-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--teal);
+      margin-bottom: 14px;
+    }
+
+    /* ── Team grid ── */
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+      margin-bottom: 36px;
+    }
+
+    .team-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      transition: box-shadow 0.15s, transform 0.15s;
+    }
+    .team-card:hover {
+      box-shadow: 0 6px 20px rgba(26,107,92,0.13);
+      transform: translateY(-2px);
+    }
+
+    .team-card-top {
+      background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .team-card-logo {
+      width: 38px; height: 38px;
+      object-fit: contain;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.15);
+      padding: 3px;
+      flex-shrink: 0;
+    }
+    .team-card-logo-placeholder {
+      width: 38px; height: 38px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 900; color: rgba(255,255,255,0.7);
+      flex-shrink: 0;
+    }
+    .team-card-name  { font-size: 15px; font-weight: 800; color: #fff; line-height: 1.2; }
+    .team-card-club  { font-size: 11px; color: rgba(255,255,255,0.75); margin-top: 2px; }
+
+    .team-card-bottom {
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .team-card-type {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--teal);
+      background: #e8f5f1;
+      border-radius: 4px;
+      padding: 3px 8px;
+    }
+    .team-card-arrow {
+      font-size: 20px;
+      color: #ccc;
+      line-height: 1;
+    }
+
+    /* ── States ── */
+    .hub-loading, .hub-error, .hub-empty {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .hub-spinner {
+      width: 32px; height: 32px;
+      border: 3px solid #e0ede9;
+      border-top-color: var(--teal);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto 14px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hub-error { color: #c62828; }
+
+    /* ── Footer ── */
+    .hub-footer {
+      text-align: center;
+      font-size: 11px;
+      color: #bbb;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<header class="hub-header">
+  <img class="hub-logo" id="hub-logo" src="assests/favicon.png" alt="N1 HSP logo">
+  <div class="hub-header-text">
+    <h1 id="hub-club-name">N1 HSP</h1>
+    <p>Team Performance Hub</p>
+  </div>
+</header>
+
+<main class="hub-main">
+  <div id="hub-content">
+    <div class="hub-loading">
+      <div class="hub-spinner"></div>
+      Loading teams…
+    </div>
+  </div>
+  <div class="hub-footer">View-only · No login required</div>
+</main>
+
+<script>
+  const SHEET_ID  = '1j_E4xAEBmx8TpumZYTI76PLhQ9E_htud-yCbMqUw9kM';
+  const API_KEY   = 'AIzaSyCvJ3P7gVeoayPpMUd7Vj3Tjh87h5T5NoQ';
+  const VIEWER_BASE = 'https://numberonehsp.github.io/n1hsp-performance-app/#view/';
+
+  async function fetchTab(tab) {
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(tab)}?key=${API_KEY}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Failed to load ${tab}: ${res.status}`);
+    const { values = [] } = await res.json();
+    if (values.length < 2) return [];
+    const [headers, ...rows] = values;
+    return rows.map(row => Object.fromEntries(headers.map((h, i) => [h, row[i] ?? ''])));
+  }
+
+  function toRows(objects, headers) { return objects; } // alias for clarity
+
+  async function init() {
+    const content = document.getElementById('hub-content');
+    try {
+      const [clubs, teams] = await Promise.all([fetchTab('clubs'), fetchTab('teams')]);
+
+      // Update header with first club's info
+      const firstClub = clubs[0];
+      if (firstClub) {
+        document.getElementById('hub-club-name').textContent = firstClub.name || 'N1 HSP';
+        if (firstClub.logo_url) {
+          document.getElementById('hub-logo').src = firstClub.logo_url;
+        }
+        document.title = `${firstClub.name || 'N1 HSP'} — Team Hub`;
+      }
+
+      if (!teams.length) {
+        content.innerHTML = '<div class="hub-empty">No teams found.</div>';
+        return;
+      }
+
+      // Group teams by club
+      const clubMap = Object.fromEntries(clubs.map(c => [c.club_id, c]));
+      const grouped = {};
+      teams.forEach(t => {
+        const cid = t.club_id || '__';
+        if (!grouped[cid]) grouped[cid] = [];
+        grouped[cid].push(t);
+      });
+
+      let html = '';
+      Object.entries(grouped).forEach(([clubId, clubTeams]) => {
+        const club = clubMap[clubId] || {};
+        const clubName = club.name || clubId;
+        const logoUrl  = club.logo_url || '';
+
+        html += `<div class="hub-section-title">${clubName}</div>`;
+        html += `<div class="team-grid">`;
+
+        clubTeams.forEach(team => {
+          const viewUrl  = `${VIEWER_BASE}${encodeURIComponent(team.team_id)}`;
+          const initials = (team.name || '?')[0].toUpperCase();
+          const logoHtml = logoUrl
+            ? `<img class="team-card-logo" src="${logoUrl}" alt="${clubName} logo">`
+            : `<div class="team-card-logo-placeholder">${initials}</div>`;
+
+          html += `
+            <a class="team-card" href="${viewUrl}" target="_blank" rel="noopener">
+              <div class="team-card-top">
+                ${logoHtml}
+                <div>
+                  <div class="team-card-name">${team.name || team.team_id}</div>
+                  <div class="team-card-club">${clubName}</div>
+                </div>
+              </div>
+              <div class="team-card-bottom">
+                <span class="team-card-type">${team.type || 'Team'}</span>
+                <span class="team-card-arrow">›</span>
+              </div>
+            </a>`;
+        });
+
+        html += `</div>`;
+      });
+
+      content.innerHTML = html;
+
+    } catch (err) {
+      console.error(err);
+      content.innerHTML = `<div class="hub-error">Could not load team data. Please try again later.</div>`;
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>
