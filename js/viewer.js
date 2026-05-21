@@ -10,28 +10,43 @@ const viewerCache = {
   results: [],
 };
 
-const toObjects = (rows, keys) =>
-  rows.slice(1).map(r => Object.fromEntries(keys.map((k, i) => [k, r[i] || ''])));
+// Use the sheet's own header row as keys (trimmed), same approach as readSheet().
+// Also trims every cell value so whitespace differences don't break comparisons.
+// Skips entirely blank rows.
+const toObjects = (rows) => {
+  if (rows.length < 2) return [];
+  const [headers] = rows;
+  const keys = headers.map(h => (h || '').toString().trim());
+  return rows.slice(1)
+    .filter(row => row.some(c => (c || '').toString().trim() !== ''))
+    .map(row => Object.fromEntries(keys.map((k, i) => [k, (row[i] ?? '').toString().trim()])));
+};
+
+// Ensures objects always have an `id` field regardless of whether the sheet
+// column is named `id`, `session_id`, `team_id`, `player_id`, etc.
+function normalizeId(obj, ...aliases) {
+  if (!obj.id) {
+    for (const k of aliases) {
+      if (obj[k]) { obj.id = obj[k]; break; }
+    }
+  }
+  return obj;
+}
 
 async function loadViewerData() {
   const [clubRows, teamRows, playerRows, sessionRows, resultRows] = await Promise.all([
-    readSheetPublic('clubs!A:C'),
-    readSheetPublic('teams!A:D'),
-    readSheetPublic('players!A:C'),
-    readSheetPublic('sessions!A:C'),
-    readSheetPublic('results!A:M'),
+    readSheetPublic('clubs!A:D'),
+    readSheetPublic('teams!A:E'),
+    readSheetPublic('players!A:D'),
+    readSheetPublic('sessions!A:E'),
+    readSheetPublic('results!A:N'),
   ]);
 
-  viewerCache.clubs   = toObjects(clubRows,   ['id', 'name', 'logo_url']);
-  viewerCache.teams   = toObjects(teamRows,   ['id', 'club_id', 'name', 'type']);
-  viewerCache.players = toObjects(playerRows, ['id', 'team_id', 'name']);
-  viewerCache.sessions = toObjects(sessionRows, ['id', 'team_id', 'date']);
-  viewerCache.results = toObjects(resultRows, [
-    'id', 'session_id', 'player_id',
-    'height', 'weight', 'cmj', 'sprint_20m',
-    'mas_min', 'mas_sec',
-    'body_fat_pct', 'body_fat_mass', 'skeletal_muscle_mass',
-  ]);
+  viewerCache.clubs    = toObjects(clubRows).map(o   => normalizeId(o, 'club_id'));
+  viewerCache.teams    = toObjects(teamRows).map(o   => normalizeId(o, 'team_id'));
+  viewerCache.players  = toObjects(playerRows).map(o => normalizeId(o, 'player_id'));
+  viewerCache.sessions = toObjects(sessionRows).map(o => normalizeId(o, 'session_id'));
+  viewerCache.results  = toObjects(resultRows);
 }
 
 // Returns (or creates) the viewer root container, hiding all normal views
