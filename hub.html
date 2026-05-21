@@ -220,7 +220,8 @@
       }
 
       // Group teams by club
-      const clubMap = Object.fromEntries(clubs.map(c => [c.club_id, c]));
+      // Sheet headers are `id` (not `club_id`/`team_id`) — use .id throughout
+      const clubMap = Object.fromEntries(clubs.map(c => [c.id || c.club_id, c]));
       const grouped = {};
       teams.forEach(t => {
         const cid = t.club_id || '__';
@@ -238,7 +239,9 @@
         html += `<div class="team-grid">`;
 
         clubTeams.forEach(team => {
-          const viewUrl  = `${VIEWER_BASE}${encodeURIComponent(team.team_id)}`;
+          // teams tab column header is `id`, not `team_id`
+          const teamId   = team.id || team.team_id || '';
+          const viewUrl  = `${VIEWER_BASE}${encodeURIComponent(teamId)}`;
           const initials = (team.name || '?')[0].toUpperCase();
           const logoHtml = logoUrl
             ? `<img class="team-card-logo" src="${logoUrl}" alt="${clubName} logo">`
@@ -249,7 +252,7 @@
               <div class="team-card-top">
                 ${logoHtml}
                 <div>
-                  <div class="team-card-name">${team.name || team.team_id}</div>
+                  <div class="team-card-name">${team.name || teamId}</div>
                   <div class="team-card-club">${clubName}</div>
                 </div>
               </div>
