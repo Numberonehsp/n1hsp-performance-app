@@ -49,7 +49,21 @@ export async function renderEntry(teamId, date) {
   document.getElementById('btn-save-session').onclick = () => handleSave(teamId, date);
 
   renderPlayerStrip();
-  selectPlayer(0);
+
+  if (currentPlayers.length === 0) {
+    const form = document.getElementById('entry-form-container');
+    form.innerHTML = `
+      <div class="entry-form card entry-empty-state">
+        <p class="entry-empty-msg">No players found for this team.</p>
+        <p class="entry-empty-hint">Check that the <strong>team_id</strong> column in the players tab matches <strong>${teamId}</strong>, or add players below.</p>
+        <div class="entry-add-player-row">
+          <button type="button" class="btn-add-player-inline" id="btn-add-player-inline">+ Add New Player</button>
+        </div>
+      </div>`;
+    document.getElementById('btn-add-player-inline').onclick = () => openAddPlayerModal(currentTeam.id);
+  } else {
+    selectPlayer(0);
+  }
   updateSaveButton();
 
   // When a player is added via the modal, refresh the list and jump to the new player
