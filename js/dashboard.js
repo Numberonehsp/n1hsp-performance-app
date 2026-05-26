@@ -31,9 +31,18 @@ export async function renderDashboard() {
       const teamSessions = sessions
         .filter(s => s.team_id === team.id)
         .sort((a, b) => b.date.localeCompare(a.date));
-      const latestSession = teamSessions[0];
 
       const todaySession = teamSessions.find(s => s.date === today);
+
+      // De-dupe by date — wifi-drop artefacts leave multiple session rows per date.
+      // The viewer already merges results; dashboard just needs one entry per date.
+      const seenDates = new Set();
+      const uniqueSessions = teamSessions.filter(s => {
+        if (seenDates.has(s.date)) return false;
+        seenDates.add(s.date);
+        return true;
+      });
+      const latestSession = uniqueSessions[0];
 
       const teamEl = document.createElement('div');
       teamEl.className = 'card team-card';
@@ -57,10 +66,10 @@ export async function renderDashboard() {
                Last tested: <strong>${latestSession.date}</strong>
                <a class="link-view-report" href="#team-report?sessionId=${latestSession.id}">View Report →</a>
              </div>
-             ${teamSessions.length > 1 ? `
+             ${uniqueSessions.length > 1 ? `
                <details class="past-sessions">
-                 <summary>Older sessions (${teamSessions.length - 1})</summary>
-                 ${teamSessions.slice(1).map(s =>
+                 <summary>Older sessions (${uniqueSessions.length - 1})</summary>
+                 ${uniqueSessions.slice(1).map(s =>
                    `<div class="past-session-row">
                      ${s.date}
                      <a href="#team-report?sessionId=${s.id}">View →</a>
