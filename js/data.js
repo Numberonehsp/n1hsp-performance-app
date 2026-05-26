@@ -34,9 +34,18 @@ export function findPreviousSession(sessions, teamId, currentSessionId) {
 }
 
 export function getPlayerResult(results, playerId, sessionId) {
-  // Use last match so updated rows written during a resumed session take precedence
+  // Collect all rows for this player+session (may be multiple due to split saves or resume edits)
   const matches = results.filter(r => r.player_id === playerId && r.session_id === sessionId);
-  return matches[matches.length - 1] ?? null;
+  if (matches.length === 0) return null;
+  if (matches.length === 1) return matches[0];
+  // Merge: later rows take precedence per field, but empty values never overwrite real data
+  const merged = { ...matches[0] };
+  for (let i = 1; i < matches.length; i++) {
+    for (const [k, v] of Object.entries(matches[i])) {
+      if (v !== '' && v !== null && v !== undefined) merged[k] = v;
+    }
+  }
+  return merged;
 }
 
 export function masToSeconds(min, sec) {

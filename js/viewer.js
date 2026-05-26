@@ -31,11 +31,21 @@ function getResultsForSession(sessionId) {
   return viewerCache.results.filter(r => ids.includes(r.session_id));
 }
 
-// Returns the last result row for a player in a results array.
-// "Last" takes precedence so a row written during a resumed session overrides the original.
+// Returns a single merged result for a player from all matching rows.
+// Fields are filled from any row that has a non-empty value, with later rows
+// taking precedence for the same field. This handles split sessions caused by
+// wifi drops where different metrics landed in different session rows.
 function lastResultFor(results, playerId) {
   const matches = results.filter(r => r.player_id === playerId);
-  return matches[matches.length - 1] || null;
+  if (matches.length === 0) return null;
+  if (matches.length === 1) return matches[0];
+  const merged = { ...matches[0] };
+  for (let i = 1; i < matches.length; i++) {
+    for (const [k, v] of Object.entries(matches[i])) {
+      if (v !== '' && v !== null && v !== undefined) merged[k] = v;
+    }
+  }
+  return merged;
 }
 
 // Use the sheet's own header row as keys (trimmed), same approach as readSheet().
