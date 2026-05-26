@@ -34,7 +34,9 @@ export function findPreviousSession(sessions, teamId, currentSessionId) {
 }
 
 export function getPlayerResult(results, playerId, sessionId) {
-  return results.find(r => r.player_id === playerId && r.session_id === sessionId) ?? null;
+  // Use last match so updated rows written during a resumed session take precedence
+  const matches = results.filter(r => r.player_id === playerId && r.session_id === sessionId);
+  return matches[matches.length - 1] ?? null;
 }
 
 export function masToSeconds(min, sec) {

@@ -18,7 +18,8 @@ function showToast(msg) {
 let currentTeam = null;
 let currentPlayers = [];
 let currentPlayerIndex = 0;
-let resultsMap = {};     // { [playerId]: { ...fieldValues } }
+let resultsMap = {};      // { [playerId]: { ...fieldValues } }
+let preloadedMap = {};    // snapshot of what was loaded from Sheets — used to skip unchanged rows on save
 let skippedSet = new Set();
 let previousResults = {}; // { [playerId]: resultRow | null }
 
@@ -29,6 +30,7 @@ export async function renderEntry(teamId, date) {
 
   currentPlayers = players.filter(p => p.team_id === teamId);
   resultsMap = {};
+  preloadedMap = {};
   skippedSet = new Set();
   currentPlayerIndex = 0;
 
@@ -49,15 +51,36 @@ export async function renderEntry(teamId, date) {
     `${currentTeam.name} — ${date}`;
   document.getElementById('btn-save-session').onclick = () => handleSave(teamId, date);
 
-  // Restore any locally-saved draft (e.g. after a page reload following wifi loss)
-  try {
-    const draft = JSON.parse(localStorage.getItem(`${DRAFT_KEY_PREFIX}${teamId}_${date}`) || 'null');
-    if (draft) {
-      resultsMap = draft.resultsMap || {};
-      skippedSet = new Set(draft.skipped || []);
-      showToast('Draft restored from local storage.');
-    }
-  } catch { /* ignore corrupt draft */ }
+  // If a session already exists in Sheets for this team+date, pre-load its results.
+  // This is the "resume" path — players already tested show as done, others are blank.
+  const existingSession = sessions.find(s => s.team_id === teamId && s.date === date);
+  if (existingSession) {
+    const metrics = getMetricsForTeamType(currentTeam.type);
+    const allKeys = metrics.flatMap(m => m === 'mas' ? ['mas_min', 'mas_sec'] : [m]);
+    // Use last result per player (in case of previous resume+save producing duplicates)
+    const sessionResults = results.filter(r => r.session_id === existingSession.id);
+    const byPlayer = {};
+    sessionResults.forEach(r => { byPlayer[r.player_id] = r; }); // last write wins
+    Object.entries(byPlayer).forEach(([playerId, r]) => {
+      const snapshot = Object.fromEntries(allKeys.map(k => [k, r[k] ?? '']));
+      preloadedMap[playerId] = snapshot;
+      resultsMap[playerId] = { ...snapshot };
+    });
+    const count = Object.keys(preloadedMap).length;
+    if (count > 0) showToast(`Resuming session — ${count} player${count !== 1 ? 's' : ''} already saved.`);
+    // Clear any local draft since Sheets is the source of truth
+    localStorage.removeItem(`${DRAFT_KEY_PREFIX}${teamId}_${date}`);
+  } else {
+    // No Sheets session yet — restore any locally-saved draft (e.g. after wifi loss before save)
+    try {
+      const draft = JSON.parse(localStorage.getItem(`${DRAFT_KEY_PREFIX}${teamId}_${date}`) || 'null');
+      if (draft) {
+        resultsMap = draft.resultsMap || {};
+        skippedSet = new Set(draft.skipped || []);
+        showToast('Draft restored from local storage.');
+      }
+    } catch { /* ignore corrupt draft */ }
+  }
 
   renderPlayerStrip();
 
@@ -260,7 +283,8 @@ function skipPlayer(player) {
 
 function updateSaveButton() {
   const btn = document.getElementById('btn-save-session');
-  btn.disabled = Object.keys(resultsMap).length === 0;
+  // Enable if any data exists (new entries OR pre-loaded from a resumed session)
+  btn.disabled = Object.keys(resultsMap).length === 0 && Object.keys(preloadedMap).length === 0;
 }
 
 async function handleSave(teamId, date) {
@@ -273,8 +297,23 @@ async function handleSave(teamId, date) {
   const existing = sessions.find(s => s.team_id === teamId && s.date === date);
   const sessionId = existing ? existing.id : deriveSessionId(teamId, date);
 
+  // Only write players whose data is new or changed vs what was loaded from Sheets.
+  // This avoids duplicate rows when resuming a session.
+  const toWrite = {};
+  for (const [playerId, data] of Object.entries(resultsMap)) {
+    const pre = preloadedMap[playerId];
+    if (!pre) {
+      toWrite[playerId] = data; // new player
+    } else {
+      const changed = Object.keys(data).some(k => (data[k] ?? '') !== (pre[k] ?? ''));
+      if (changed) toWrite[playerId] = data; // updated values
+    }
+  }
+
   try {
-    await saveSession(teamId, date, resultsMap, sessionId);
+    if (Object.keys(toWrite).length > 0) {
+      await saveSession(teamId, date, toWrite, sessionId);
+    }
     // Clear draft on successful save
     localStorage.removeItem(`${DRAFT_KEY_PREFIX}${teamId}_${date}`);
     await loadAllData();

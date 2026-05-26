@@ -6,6 +6,7 @@ document.addEventListener('playerAdded', () => renderDashboard());
 
 export async function renderDashboard() {
   const { clubs, teams, sessions } = getData();
+  const today = new Date().toISOString().slice(0, 10);
   const container = document.getElementById('dashboard-content');
   container.innerHTML = '';
 
@@ -32,6 +33,8 @@ export async function renderDashboard() {
         .sort((a, b) => b.date.localeCompare(a.date));
       const latestSession = teamSessions[0];
 
+      const todaySession = teamSessions.find(s => s.date === today);
+
       const teamEl = document.createElement('div');
       teamEl.className = 'card team-card';
       teamEl.innerHTML = `
@@ -41,8 +44,12 @@ export async function renderDashboard() {
             <div class="team-type badge badge-${(team.type || '').toLowerCase()}">${team.type}</div>
           </div>
           <div class="team-actions">
-            <button type="button" class="btn-primary btn-sm btn-new-session"
-              data-team-id="${team.id}">+ New Session</button>
+            ${todaySession
+              ? `<button type="button" class="btn-resume btn-sm btn-new-session"
+                   data-team-id="${team.id}" title="Continue today's session">↩ Resume Today</button>`
+              : `<button type="button" class="btn-primary btn-sm btn-new-session"
+                   data-team-id="${team.id}">+ New Session</button>`
+            }
           </div>
         </div>
         ${latestSession

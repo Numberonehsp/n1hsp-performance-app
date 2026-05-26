@@ -31,6 +31,13 @@ function getResultsForSession(sessionId) {
   return viewerCache.results.filter(r => ids.includes(r.session_id));
 }
 
+// Returns the last result row for a player in a results array.
+// "Last" takes precedence so a row written during a resumed session overrides the original.
+function lastResultFor(results, playerId) {
+  const matches = results.filter(r => r.player_id === playerId);
+  return matches[matches.length - 1] || null;
+}
+
 // Use the sheet's own header row as keys (trimmed), same approach as readSheet().
 // Also trims every cell value so whitespace differences don't break comparisons.
 // Skips entirely blank rows.
@@ -165,7 +172,7 @@ function renderTeamView(app, club, team, sessions, selectedSessionId, selectedMe
 
   // Compute numeric sort value for each player and sort
   const playersWithValues = teamPlayers.map(player => {
-    const result = sessionResults.find(r => r.player_id === player.id) || null;
+    const result = lastResultFor(sessionResults, player.id);
     const sortVal = getNumericForSort(result, metricKey);
     const displayStr = formatMetricDisplay(result, metricKey, cfg);
     const parts = player.name.trim().split(/\s+/);
@@ -215,7 +222,7 @@ function renderTeamView(app, club, team, sessions, selectedSessionId, selectedMe
           : ((teamMax - sortVal) / range) * 100))
       : null;
 
-    const prevResult = prevResults.find(r => r.player_id === player.id) || null;
+    const prevResult = lastResultFor(prevResults, player.id);
     const prevDisplay = formatMetricDisplay(prevResult, metricKey, cfg);
     const showPrev = prevResult && prevDisplay !== '—';
 
@@ -366,7 +373,7 @@ function buildMetricCards(team, sessionId, playerId, sessions) {
   const bodyKeys = isSenior ? [...METRICS_SENIOR] : [];
 
   const sessionResults = getResultsForSession(sessionId);
-  const currResult = sessionResults.find(r => r.player_id === playerId) || null;
+  const currResult = lastResultFor(sessionResults, playerId);
 
   // Previous session: sessions are sorted descending, so index + 1
   const currIdx = sessions.findIndex(s => s.id === sessionId);
@@ -374,7 +381,7 @@ function buildMetricCards(team, sessionId, playerId, sessions) {
   const prevResults = prevSession
     ? getResultsForSession(prevSession.id)
     : [];
-  const prevResult = prevResults.find(r => r.player_id === playerId) || null;
+  const prevResult = lastResultFor(prevResults, playerId);
 
   function buildOneCard(key) {
     const cfg = METRIC_CONFIG[key];
