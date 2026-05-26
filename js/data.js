@@ -86,10 +86,23 @@ export function getMetricsForTeamType(teamType) {
   return teamType === 'Senior' ? [...METRICS_ALL, ...METRICS_SENIOR] : [...METRICS_ALL];
 }
 
-export async function saveSession(teamId, date, resultsMap) {
+// Derive a stable session ID from teamId + date so retries never create a duplicate session row.
+export function deriveSessionId(teamId, date) {
+  return `sess_${teamId}_${date.replace(/-/g, '')}`;
+}
+
+export async function saveSession(teamId, date, resultsMap, forcedSessionId = null) {
   // resultsMap: { [playerId]: { height, weight, cmj, sprint_20m, mas_min, mas_sec, ... } }
-  const sessionId = `sess_${Date.now()}`;
-  await appendRow('sessions', [sessionId, teamId, date]);
+  // If a session for this team+date already exists in the cache (e.g. wifi drop and retry),
+  // reuse its ID so we don't create a duplicate session row in Sheets.
+  const { sessions } = getData();
+  const existing = sessions.find(s => s.team_id === teamId && s.date === date);
+  const sessionId = forcedSessionId ?? (existing ? existing.id : deriveSessionId(teamId, date));
+  const needsSessionRow = !existing && !forcedSessionId;
+
+  if (needsSessionRow) {
+    await appendRow('sessions', [sessionId, teamId, date]);
+  }
   for (const [playerId, r] of Object.entries(resultsMap)) {
     const rowId = `res_${sessionId}_${playerId}`;
     await appendRow('results', [

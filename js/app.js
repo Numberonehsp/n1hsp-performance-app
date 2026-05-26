@@ -24,7 +24,7 @@ async function retryQueuedSaves() {
   const remaining = [];
   for (const item of queue) {
     try {
-      await saveSession(item.teamId, item.date, item.resultsMap);
+      await saveSession(item.teamId, item.date, item.resultsMap, item.sessionId);
     } catch {
       remaining.push(item);
     }

@@ -10,6 +10,27 @@ const viewerCache = {
   results: [],
 };
 
+// Maps every session_id → array of all session_ids sharing the same team+date.
+// Built after loadViewerData(). Ensures same-day split sessions are merged in all views.
+let mergedSessionIds = {}; // { sessionId: [sessionId, ...sameDay] }
+
+function buildMergedSessionMap() {
+  mergedSessionIds = {};
+  const byKey = {}; // `${team_id}::${date}` → [session_ids]
+  viewerCache.sessions.forEach(s => {
+    const key = `${s.team_id}::${s.date}`;
+    if (!byKey[key]) byKey[key] = [];
+    byKey[key].push(s.id);
+  });
+  Object.values(byKey).forEach(ids => ids.forEach(id => { mergedSessionIds[id] = ids; }));
+}
+
+// Returns all results for a session, including any split sessions on the same day.
+function getResultsForSession(sessionId) {
+  const ids = mergedSessionIds[sessionId] || [sessionId];
+  return viewerCache.results.filter(r => ids.includes(r.session_id));
+}
+
 // Use the sheet's own header row as keys (trimmed), same approach as readSheet().
 // Also trims every cell value so whitespace differences don't break comparisons.
 // Skips entirely blank rows.
@@ -47,6 +68,7 @@ async function loadViewerData() {
   viewerCache.players  = toObjects(playerRows).map(o => normalizeId(o, 'player_id'));
   viewerCache.sessions = toObjects(sessionRows).map(o => normalizeId(o, 'session_id'));
   viewerCache.results  = toObjects(resultRows);
+  buildMergedSessionMap();
 }
 
 // Returns (or creates) the viewer root container, hiding all normal views
@@ -126,7 +148,7 @@ function renderTeamView(app, club, team, sessions, selectedSessionId, selectedMe
 
   const teamPlayers = viewerCache.players.filter(p => p.team_id === team.id);
   const sessionResults = sessionId
-    ? viewerCache.results.filter(r => r.session_id === sessionId)
+    ? getResultsForSession(sessionId)
     : [];
 
   const cfg = METRIC_CONFIG[metricKey];
@@ -181,7 +203,7 @@ function renderTeamView(app, club, team, sessions, selectedSessionId, selectedMe
   const currIdx = sessions.findIndex(s => s.id === sessionId);
   const prevSession = currIdx >= 0 && currIdx + 1 < sessions.length ? sessions[currIdx + 1] : null;
   const prevResults = prevSession
-    ? viewerCache.results.filter(r => r.session_id === prevSession.id)
+    ? getResultsForSession(prevSession.id)
     : [];
 
   const playerRows = playersWithValues.map(({ player, result, displayStr, initials, sortVal }, idx) => {
@@ -343,14 +365,14 @@ function buildMetricCards(team, sessionId, playerId, sessions) {
   const perfKeys = [...METRICS_ALL];
   const bodyKeys = isSenior ? [...METRICS_SENIOR] : [];
 
-  const sessionResults = viewerCache.results.filter(r => r.session_id === sessionId);
+  const sessionResults = getResultsForSession(sessionId);
   const currResult = sessionResults.find(r => r.player_id === playerId) || null;
 
   // Previous session: sessions are sorted descending, so index + 1
   const currIdx = sessions.findIndex(s => s.id === sessionId);
   const prevSession = currIdx >= 0 && currIdx + 1 < sessions.length ? sessions[currIdx + 1] : null;
   const prevResults = prevSession
-    ? viewerCache.results.filter(r => r.session_id === prevSession.id)
+    ? getResultsForSession(prevSession.id)
     : [];
   const prevResult = prevResults.find(r => r.player_id === playerId) || null;
 
@@ -482,10 +504,13 @@ export async function initViewer(teamId) {
 
   const club = viewerCache.clubs.find(c => c.id === team.club_id) || null;
 
-  // Sessions for this team, newest first
+  // Sessions for this team, newest first, de-duped by date so split sessions
+  // on the same day appear as one entry (results are merged via getResultsForSession).
+  const seen = new Set();
   const sessions = viewerCache.sessions
     .filter(s => s.team_id === team.id)
-    .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+    .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
+    .filter(s => { if (seen.has(s.date)) return false; seen.add(s.date); return true; });
 
   if (!sessions.length) {
     app.innerHTML = renderViewerHeader(club, team) +

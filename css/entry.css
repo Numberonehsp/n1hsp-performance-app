@@ -15,7 +15,12 @@
 }
 .player-chip.done { background: var(--green); color: white; border-color: var(--green-light); }
 .player-chip.active { background: white; color: var(--teal-dark); border-color: white; }
-.player-chip:hover:not(.active) { background: rgba(255,255,255,0.2); }
+.player-chip.skipped {
+  background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.35);
+  border-color: rgba(255,255,255,0.15); text-decoration: line-through;
+  pointer-events: none;
+}
+.player-chip:hover:not(.active):not(.skipped) { background: rgba(255,255,255,0.2); }
 
 /* Entry form */
 .entry-form { padding-bottom: 40px; }

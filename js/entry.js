@@ -1,10 +1,11 @@
 import { getData, getPlayerResult, getDisplayValue,
-         getMetricsForTeamType, saveSession, loadAllData } from './data.js';
+         getMetricsForTeamType, saveSession, deriveSessionId, loadAllData } from './data.js';
 import { METRIC_CONFIG } from './config.js';
 import { navigate } from './router.js';
 import { openAddPlayerModal } from './add-player.js';
 
-const SAVE_QUEUE_KEY = 'n1hsp_save_queue';
+const SAVE_QUEUE_KEY  = 'n1hsp_save_queue';
+const DRAFT_KEY_PREFIX = 'n1hsp_draft_';
 
 function showToast(msg) {
   const t = document.createElement('div');
@@ -47,6 +48,16 @@ export async function renderEntry(teamId, date) {
   document.getElementById('entry-title').textContent =
     `${currentTeam.name} — ${date}`;
   document.getElementById('btn-save-session').onclick = () => handleSave(teamId, date);
+
+  // Restore any locally-saved draft (e.g. after a page reload following wifi loss)
+  try {
+    const draft = JSON.parse(localStorage.getItem(`${DRAFT_KEY_PREFIX}${teamId}_${date}`) || 'null');
+    if (draft) {
+      resultsMap = draft.resultsMap || {};
+      skippedSet = new Set(draft.skipped || []);
+      showToast('Draft restored from local storage.');
+    }
+  } catch { /* ignore corrupt draft */ }
 
   renderPlayerStrip();
 
@@ -113,9 +124,10 @@ function selectPlayer(index) {
   currentPlayers.forEach((p, i) => {
     const chip = document.getElementById(`chip-${p.id}`);
     if (!chip) return;
-    chip.classList.remove('active', 'done');
+    chip.classList.remove('active', 'done', 'skipped');
     if (i === index) chip.classList.add('active');
-    else if (resultsMap[p.id] || skippedSet.has(p.id)) chip.classList.add('done');
+    else if (skippedSet.has(p.id)) chip.classList.add('skipped');
+    else if (resultsMap[p.id]) chip.classList.add('done');
   });
 
   // Scroll active chip into view
@@ -207,10 +219,25 @@ function readFormValues(metrics) {
   return values;
 }
 
+function saveDraft(teamId, date) {
+  try {
+    localStorage.setItem(
+      `${DRAFT_KEY_PREFIX}${teamId}_${date}`,
+      JSON.stringify({ resultsMap, skipped: [...skippedSet], savedAt: Date.now() })
+    );
+  } catch { /* storage full — ignore */ }
+}
+
 function savePlayerAndAdvance(player, metrics) {
   resultsMap[player.id] = readFormValues(metrics);
   updateSaveButton();
-  const next = currentPlayerIndex + 1;
+  saveDraft(currentTeam.id, document.getElementById('entry-title').textContent.split(' — ')[1]);
+  // Advance to next player that isn't already saved or skipped
+  let next = currentPlayerIndex + 1;
+  while (next < currentPlayers.length &&
+         (resultsMap[currentPlayers[next].id] || skippedSet.has(currentPlayers[next].id))) {
+    next++;
+  }
   if (next < currentPlayers.length) {
     selectPlayer(next);
   } else {
@@ -221,8 +248,14 @@ function savePlayerAndAdvance(player, metrics) {
 function skipPlayer(player) {
   skippedSet.add(player.id);
   updateSaveButton();
-  const next = currentPlayerIndex + 1;
+  // Advance to next player that isn't already saved or skipped
+  let next = currentPlayerIndex + 1;
+  while (next < currentPlayers.length &&
+         (resultsMap[currentPlayers[next].id] || skippedSet.has(currentPlayers[next].id))) {
+    next++;
+  }
   if (next < currentPlayers.length) selectPlayer(next);
+  else selectPlayer(currentPlayerIndex); // all done — stay on current to show state
 }
 
 function updateSaveButton() {
@@ -234,17 +267,28 @@ async function handleSave(teamId, date) {
   const btn = document.getElementById('btn-save-session');
   btn.disabled = true;
   btn.textContent = 'Saving…';
+
+  // Pre-compute stable session ID so any queued retry uses the exact same ID
+  const { sessions } = getData();
+  const existing = sessions.find(s => s.team_id === teamId && s.date === date);
+  const sessionId = existing ? existing.id : deriveSessionId(teamId, date);
+
   try {
-    const sessionId = await saveSession(teamId, date, resultsMap);
+    await saveSession(teamId, date, resultsMap, sessionId);
+    // Clear draft on successful save
+    localStorage.removeItem(`${DRAFT_KEY_PREFIX}${teamId}_${date}`);
     await loadAllData();
     navigate('team-report', { sessionId });
   } catch (err) {
     console.error(err);
+    // Store sessionId in queue so retries never create a duplicate session row
     const queue = JSON.parse(localStorage.getItem(SAVE_QUEUE_KEY) || '[]');
-    queue.push({ teamId, date, resultsMap, timestamp: Date.now() });
-    localStorage.setItem(SAVE_QUEUE_KEY, JSON.stringify(queue));
+    // Replace any existing queue item for the same team+date rather than duplicating
+    const filtered = queue.filter(q => !(q.teamId === teamId && q.date === date));
+    filtered.push({ teamId, date, resultsMap, sessionId, timestamp: Date.now() });
+    localStorage.setItem(SAVE_QUEUE_KEY, JSON.stringify(filtered));
     btn.disabled = false;
     btn.textContent = 'Save';
-    showToast('Save failed — will retry when online.');
+    showToast('No connection — data saved locally and will upload automatically.');
   }
 }
