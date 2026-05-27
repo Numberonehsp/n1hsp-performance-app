@@ -506,9 +506,13 @@ export async function initViewer(teamId) {
   try {
     await loadViewerData();
   } catch (err) {
+    const isRateLimit = err.message && err.message.includes('Too many requests');
     app.innerHTML = `<div style="padding:32px;text-align:center;color:#c62828;">
-      Failed to load data. Please check your API key configuration.<br>
-      <small>${err.message}</small>
+      ${isRateLimit
+        ? `<strong>Too many requests — please wait a moment and refresh the page.</strong><br>
+           <small style="color:#888;">This happens when several people open their report links at the same time. It resolves automatically in under a minute.</small>`
+        : `Failed to load data.<br><small>${err.message}</small>`
+      }
     </div>`;
     return;
   }
