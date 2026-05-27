@@ -71,10 +71,24 @@ function normalizeId(obj, ...aliases) {
   return obj;
 }
 
+// Returns the list of metrics visible in the coach viewer for a given team.
+// Reads the `hidden_metrics` column from the teams tab (comma-separated metric keys,
+// e.g. "weight" or "weight,body_fat_pct"). Hidden metrics are excluded from the
+// team ranked list, player scorecards, and the metric selector.
+// Only affects the coach/player viewer — the admin team report is unaffected.
+function getVisibleMetrics(team) {
+  const isSenior = (team.type || '').toLowerCase() === 'senior';
+  const all = isSenior ? [...METRICS_ALL, ...METRICS_SENIOR] : [...METRICS_ALL];
+  const hidden = new Set(
+    (team.hidden_metrics || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+  );
+  return hidden.size ? all.filter(m => !hidden.has(m)) : all;
+}
+
 async function loadViewerData() {
   const [clubRows, teamRows, playerRows, sessionRows, resultRows] = await Promise.all([
     readSheetPublic('clubs!A:D'),
-    readSheetPublic('teams!A:E'),
+    readSheetPublic('teams!A:F'),
     readSheetPublic('players!A:D'),
     readSheetPublic('sessions!A:E'),
     readSheetPublic('results!A:N'),
@@ -158,10 +172,11 @@ function formatMetricDisplay(result, key, cfg) {
 
 function renderTeamView(app, club, team, sessions, selectedSessionId, selectedMetricKey) {
   const sessionId = selectedSessionId || (sessions[0] && sessions[0].id) || null;
-  const metricKey = selectedMetricKey || 'cmj';
-
-  const isSenior = (team.type || '').toLowerCase() === 'senior';
-  const availableMetrics = isSenior ? [...METRICS_ALL, ...METRICS_SENIOR] : [...METRICS_ALL];
+  const availableMetrics = getVisibleMetrics(team);
+  // If the requested metric has been hidden, fall back to the first visible one
+  const metricKey = (selectedMetricKey && availableMetrics.includes(selectedMetricKey))
+    ? selectedMetricKey
+    : (availableMetrics[0] || 'cmj');
 
   const teamPlayers = viewerCache.players.filter(p => p.team_id === team.id);
   const sessionResults = sessionId
@@ -379,8 +394,9 @@ function getTeamStats(sessionResults, key) {
 
 function buildMetricCards(team, sessionId, playerId, sessions) {
   const isSenior = (team.type || '').toLowerCase() === 'senior';
-  const perfKeys = [...METRICS_ALL];
-  const bodyKeys = isSenior ? [...METRICS_SENIOR] : [];
+  const visibleMetrics = getVisibleMetrics(team);
+  const perfKeys = METRICS_ALL.filter(m => visibleMetrics.includes(m));
+  const bodyKeys = isSenior ? METRICS_SENIOR.filter(m => visibleMetrics.includes(m)) : [];
 
   const sessionResults = getResultsForSession(sessionId);
   const currResult = lastResultFor(sessionResults, playerId);
@@ -539,5 +555,7 @@ export async function initViewer(teamId) {
     return;
   }
 
-  renderTeamView(app, club, team, sessions, sessions[0].id, 'cmj');
+  // Use CMJ as default metric, but fall back to the first visible one if CMJ is hidden
+  const defaultMetric = getVisibleMetrics(team).includes('cmj') ? 'cmj' : (getVisibleMetrics(team)[0] || 'cmj');
+  renderTeamView(app, club, team, sessions, sessions[0].id, defaultMetric);
 }
