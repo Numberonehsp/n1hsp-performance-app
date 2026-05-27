@@ -7,6 +7,7 @@ import { renderEntry } from './entry.js';
 import { renderTeamReport } from './report-team.js';
 import { renderPlayerReport } from './report-player.js';
 import { renderPrintAll } from './print-all.js';
+import { renderRecover } from './recover.js';
 
 const SAVE_QUEUE_KEY = 'n1hsp_save_queue';
 
@@ -42,6 +43,7 @@ const VIEW_IDS = {
   'team-report': 'view-team-report',
   'player-report': 'view-player-report',
   'print-all': 'view-print-all',
+  recover: 'view-recover',
 };
 
 function showView(name) {
@@ -73,6 +75,10 @@ async function route() {
     case 'print-all':
       showView('print-all');
       await renderPrintAll(params.sessionId);
+      break;
+    case 'recover':
+      showView('recover');
+      await renderRecover();
       break;
     default:
       navigate('dashboard');

@@ -2,6 +2,18 @@ import { getData } from './data.js';
 import { navigate } from './router.js';
 import { openAddPlayerModal } from './add-player.js';
 
+const SAVE_QUEUE_KEY = 'n1hsp_save_queue';
+const DRAFT_PREFIX   = 'n1hsp_draft_';
+
+function hasPendingLocalData() {
+  const queue = JSON.parse(localStorage.getItem(SAVE_QUEUE_KEY) || '[]');
+  if (queue.length > 0) return true;
+  for (let i = 0; i < localStorage.length; i++) {
+    if ((localStorage.key(i) || '').startsWith(DRAFT_PREFIX)) return true;
+  }
+  return false;
+}
+
 document.addEventListener('playerAdded', () => renderDashboard());
 
 export async function renderDashboard() {
@@ -19,6 +31,15 @@ export async function renderDashboard() {
   banner.className = 'info-banner';
   banner.textContent = 'Reload the page to see sessions added by other users.';
   container.appendChild(banner);
+
+  if (hasPendingLocalData()) {
+    const recoverBanner = document.createElement('div');
+    recoverBanner.className = 'info-banner info-banner-warn';
+    recoverBanner.innerHTML = `
+      ⚠ You have unsaved session data stored on this device.
+      <a href="#recover" class="recover-link">View &amp; upload →</a>`;
+    container.appendChild(recoverBanner);
+  }
 
   clubs.forEach(club => {
     const clubTeams = teams.filter(t => t.club_id === club.id);
