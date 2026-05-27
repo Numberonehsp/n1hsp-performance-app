@@ -109,7 +109,10 @@ export async function saveSession(teamId, date, resultsMap, forcedSessionId = nu
   const { sessions } = getData();
   const existing = sessions.find(s => s.team_id === teamId && s.date === date);
   const sessionId = forcedSessionId ?? (existing ? existing.id : deriveSessionId(teamId, date));
-  const needsSessionRow = !existing && !forcedSessionId;
+  // Always write the session row if one doesn't already exist in Sheets.
+  // forcedSessionId controls the ID to use (for idempotent retries) but does NOT
+  // mean a session row was already written — only `existing` tells us that.
+  const needsSessionRow = !existing;
 
   if (needsSessionRow) {
     await appendRow('sessions', [sessionId, teamId, date]);

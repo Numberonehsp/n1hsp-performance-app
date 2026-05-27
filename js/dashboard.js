@@ -14,10 +14,17 @@ function hasPendingLocalData() {
   return false;
 }
 
+function hasOrphanedSessions(data) {
+  if (!data) return false;
+  const knownIds = new Set((data.sessions || []).map(s => s.id));
+  return (data.results || []).some(r => r.session_id && !knownIds.has(r.session_id));
+}
+
 document.addEventListener('playerAdded', () => renderDashboard());
 
 export async function renderDashboard() {
-  const { clubs, teams, sessions } = getData();
+  const data = getData();
+  const { clubs, teams, sessions } = data;
   const today = new Date().toISOString().slice(0, 10);
   const container = document.getElementById('dashboard-content');
   container.innerHTML = '';
@@ -32,12 +39,12 @@ export async function renderDashboard() {
   banner.textContent = 'Reload the page to see sessions added by other users.';
   container.appendChild(banner);
 
-  if (hasPendingLocalData()) {
+  if (hasPendingLocalData() || hasOrphanedSessions(data)) {
     const recoverBanner = document.createElement('div');
     recoverBanner.className = 'info-banner info-banner-warn';
     recoverBanner.innerHTML = `
-      ⚠ You have unsaved session data stored on this device.
-      <a href="#recover" class="recover-link">View &amp; upload →</a>`;
+      ⚠ Some session data may be incomplete or unsaved.
+      <a href="#recover" class="recover-link">View &amp; fix →</a>`;
     container.appendChild(recoverBanner);
   }
 

@@ -1,4 +1,5 @@
 import { getData, saveSession, loadAllData } from './data.js';
+import { appendRow } from './sheets.js';
 import { navigate } from './router.js';
 
 const SAVE_QUEUE_KEY  = 'n1hsp_save_queue';
@@ -45,9 +46,36 @@ function parseDraftKey(key) {
   return { teamId, date };
 }
 
+// Parses a deterministic session ID back to { teamId, date }.
+// Format: sess_${teamId}_${YYYYMMDD}  e.g. sess_cqws_20260526
+function parseSessionId(sessionId) {
+  const match = sessionId.match(/^sess_(.+)_(\d{8})$/);
+  if (!match) return null;
+  const teamId = match[1];
+  const raw    = match[2];
+  const date   = `${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}`;
+  return { teamId, date };
+}
+
+// Returns session IDs that appear in results rows but have no session row.
+function findOrphanedSessionIds(data) {
+  const knownIds = new Set(data.sessions.map(s => s.id));
+  const orphaned = new Set();
+  (data.results || []).forEach(r => {
+    if (r.session_id && !knownIds.has(r.session_id)) orphaned.add(r.session_id);
+  });
+  return [...orphaned];
+}
+
 export async function renderRecover() {
   const container = document.getElementById('recover-content');
   container.innerHTML = '';
+
+  // ── Check for orphaned results (results rows with no matching session row) ──
+  // This happens when the app wrote result rows but crashed/lost connection before
+  // writing the session row (due to the forcedSessionId bug fixed in data.js v2).
+  const data = getData();
+  const orphanedSessionIds = data ? findOrphanedSessionIds(data) : [];
 
   const queue  = JSON.parse(localStorage.getItem(SAVE_QUEUE_KEY) || '[]');
   const drafts = getDraftKeys().map(key => {
@@ -60,7 +88,7 @@ export async function renderRecover() {
     }
   }).filter(Boolean);
 
-  const hasAnything = queue.length > 0 || drafts.length > 0;
+  const hasAnything = queue.length > 0 || drafts.length > 0 || orphanedSessionIds.length > 0;
 
   if (!hasAnything) {
     container.innerHTML = `
@@ -71,6 +99,68 @@ export async function renderRecover() {
         <button type="button" class="btn-primary" onclick="history.back()">Back to Dashboard</button>
       </div>`;
     return;
+  }
+
+  // ── Orphaned session rows (results exist but session row is missing) ────
+  if (orphanedSessionIds.length > 0) {
+    const section = document.createElement('div');
+    section.className = 'recover-section';
+    section.innerHTML = `
+      <h2 class="recover-section-title">🔧 Missing Session Rows (${orphanedSessionIds.length})</h2>
+      <p class="recover-section-desc">Player results were saved but the session record is missing — this causes "Session not found" errors and hides the session from reports. Use <strong>Restore Session Row</strong> to fix each one.</p>`;
+
+    orphanedSessionIds.forEach(sessionId => {
+      const parsed = parseSessionId(sessionId);
+      const name   = parsed ? teamName(parsed.teamId) : sessionId;
+      const date   = parsed ? parsed.date : '?';
+      const teams  = data?.teams || [];
+      const teamObj = parsed ? teams.find(t => t.id === parsed.teamId) : null;
+
+      // Count result rows for this session to show player count
+      const resultCount = (data?.results || []).filter(r => r.session_id === sessionId).length;
+
+      const card = document.createElement('div');
+      card.className = 'card recover-card';
+      card.innerHTML = `
+        <div class="recover-card-header">
+          <div>
+            <div class="recover-team">${name}</div>
+            <div class="recover-meta">${date} · ${resultCount} result row${resultCount !== 1 ? 's' : ''} in Sheets · session row missing</div>
+          </div>
+          <div class="recover-actions">
+            <button type="button" class="btn-primary btn-sm btn-restore-session"
+              data-session-id="${sessionId}"
+              data-team-id="${parsed?.teamId || ''}"
+              data-date="${date}">🔧 Restore Session Row</button>
+          </div>
+        </div>`;
+      section.appendChild(card);
+    });
+
+    container.appendChild(section);
+
+    container.querySelectorAll('.btn-restore-session').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const { sessionId, teamId, date } = btn.dataset;
+        if (!teamId || !date || date === '?') {
+          showToast('Could not parse session ID — please add the row manually in Google Sheets.');
+          return;
+        }
+        btn.disabled = true;
+        btn.textContent = 'Restoring…';
+        try {
+          await appendRow('sessions', [sessionId, teamId, date]);
+          await loadAllData();
+          showToast(`Session row restored for ${teamName(teamId)} — ${date}`);
+          await renderRecover();
+        } catch (err) {
+          console.error(err);
+          btn.disabled = false;
+          btn.textContent = '🔧 Restore Session Row';
+          showToast('Failed to restore — check your connection and try again.', 6000);
+        }
+      });
+    });
   }
 
   // ── Queued saves (failed uploads waiting to retry) ──────────────────────
