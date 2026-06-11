@@ -201,29 +201,46 @@
 
   async function init() {
     const content = document.getElementById('hub-content');
+
+    // ?club=<club_id> restricts the hub to a single club
+    const clubFilter = new URLSearchParams(window.location.search).get('club');
+
     try {
       const [clubs, teams] = await Promise.all([fetchTab('clubs'), fetchTab('teams')]);
 
-      // Update header with first club's info
-      const firstClub = clubs[0];
-      if (firstClub) {
-        document.getElementById('hub-club-name').textContent = firstClub.name || 'N1 HSP';
-        if (firstClub.logo_url) {
-          document.getElementById('hub-logo').src = firstClub.logo_url;
-        }
-        document.title = `${firstClub.name || 'N1 HSP'} — Team Hub`;
+      const clubMap = Object.fromEntries(clubs.map(c => [c.id || c.club_id, c]));
+
+      // Filter clubs/teams when a ?club= param is present
+      const visibleClubs = clubFilter
+        ? clubs.filter(c => (c.id || c.club_id) === clubFilter)
+        : clubs;
+
+      if (clubFilter && !visibleClubs.length) {
+        content.innerHTML = '<div class="hub-error">Club not found. Check the link and try again.</div>';
+        return;
       }
 
-      if (!teams.length) {
+      // Update header to match the filtered club (or first club for the all-clubs view)
+      const headerClub = clubFilter ? visibleClubs[0] : clubs[0];
+      if (headerClub) {
+        document.getElementById('hub-club-name').textContent = headerClub.name || 'N1 HSP';
+        if (headerClub.logo_url) {
+          document.getElementById('hub-logo').src = headerClub.logo_url;
+        }
+        document.title = `${headerClub.name || 'N1 HSP'} — Team Hub`;
+      }
+
+      const visibleClubIds = new Set(visibleClubs.map(c => c.id || c.club_id));
+      const visibleTeams = teams.filter(t => !clubFilter || visibleClubIds.has(t.club_id));
+
+      if (!visibleTeams.length) {
         content.innerHTML = '<div class="hub-empty">No teams found.</div>';
         return;
       }
 
       // Group teams by club
-      // Sheet headers are `id` (not `club_id`/`team_id`) — use .id throughout
-      const clubMap = Object.fromEntries(clubs.map(c => [c.id || c.club_id, c]));
       const grouped = {};
-      teams.forEach(t => {
+      visibleTeams.forEach(t => {
         const cid = t.club_id || '__';
         if (!grouped[cid]) grouped[cid] = [];
         grouped[cid].push(t);
@@ -235,11 +252,13 @@
         const clubName = club.name || clubId;
         const logoUrl  = club.logo_url || '';
 
-        html += `<div class="hub-section-title">${clubName}</div>`;
+        // Only show section heading when multiple clubs are visible
+        if (!clubFilter) {
+          html += `<div class="hub-section-title">${clubName}</div>`;
+        }
         html += `<div class="team-grid">`;
 
         clubTeams.forEach(team => {
-          // teams tab column header is `id`, not `team_id`
           const teamId   = team.id || team.team_id || '';
           const viewUrl  = `${VIEWER_BASE}${encodeURIComponent(teamId)}`;
           const initials = (team.name || '?')[0].toUpperCase();
